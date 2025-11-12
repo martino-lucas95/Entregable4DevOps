@@ -30,5 +30,17 @@ services:
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/stock?schema=public"
       PORT: "3000"
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: "http://localhost:3000"
+    container_name: stock_frontend
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
+
 volumes:
   postgres_data:
