@@ -131,12 +131,12 @@ docker-compose down -v
 
 ## Tecnologías Utilizadas
 
-- **NestJS** - Framework de Node.js
-- **PostgreSQL** - Base de datos
-- **Prisma** - ORM
-- **Swagger** - Documentación de API
-- **Docker** - Contenedorización
-- **Docker Compose** - Orquestación de contenedores
+- **NestJS**
+- **PostgreSQL**
+- **Prisma**
+- **Swagger**
+- **Docker**
+- **Docker Compose**
 
 ## Notas
 
