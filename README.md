@@ -190,8 +190,8 @@ curl http://localhost:3000/stock
 - **Tailwind CSS** - Framework CSS utility-first
 
 ### DevOps
-- **Docker** - Contenedorización
-- **Docker Compose** - Orquestación de contenedores
+- **Docker**
+- **Docker Compose**
 
 ## Notas Importantes
 
