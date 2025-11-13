@@ -27,6 +27,10 @@ WORKDIR /app
 # Instalar Prisma CLI globalmente para migraciones
 RUN npm install -g prisma@^6.19.0
 
+# Crear usuario no root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 # Copiar package.json
 COPY entregable4-dev-ops/package*.json ./
 

@@ -22,6 +22,11 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 
+# Crear usuario no root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+
 # Instalar serve para servir los archivos estáticos
 RUN npm install -g serve
 
