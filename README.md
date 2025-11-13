@@ -160,7 +160,7 @@ curl http://localhost:3000/stock
 ├── Dockerfile                  # Imagen Docker de la API (incluye migraciones)
 ├── prisma/
 │   └── schema.prisma          # Schema de la base de datos
-├── entregable4-dev-ops/       # Backend (NestJS)
+├── backend/       # Backend (NestJS)
 │   └── src/
 │       ├── products/          # Módulo de productos
 │       ├── movements/         # Módulo de movimientos
