@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: stock_db
     restart: always
     environment:
@@ -18,7 +18,10 @@ services:
       retries: 5
 
   api:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: entregable4devops-backend:1.0
     container_name: stock_api
     restart: always
     depends_on:
@@ -33,14 +36,15 @@ services:
   frontend:
     build:
       context: ./frontend
-      args:
-        VITE_API_URL: "http://localhost:3000"
+      dockerfile: Dockerfile
+    image: entregable4devops-frontend:1.0
     container_name: stock_frontend
     restart: always
     depends_on:
       - api
     ports:
       - "5173:5173"
+
 
 volumes:
   postgres_data:

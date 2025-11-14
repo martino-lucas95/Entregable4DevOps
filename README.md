@@ -157,22 +157,34 @@ curl http://localhost:3000/stock
 ```
 .
 ├── docker-compose.yml          # Configuración de Docker Compose (db, api, frontend)
-├── Dockerfile                  # Imagen Docker de la API (incluye migraciones)
-├── prisma/
-│   └── schema.prisma          # Schema de la base de datos
-├── backend/       # Backend (NestJS)
+├── backend/                   # Backend (NestJS)
+│   ├── Dockerfile             # Imagen Docker de la API (incluye migraciones)
+│   ├── prisma/
+│   │   └── schema.prisma      # Schema de la base de datos
 │   └── src/
 │       ├── products/          # Módulo de productos
 │       ├── movements/         # Módulo de movimientos
 │       ├── stock/             # Módulo de stock
 │       └── prisma/            # Servicio de Prisma
-└── frontend/                  # Frontend (React + Vite)
-    ├── Dockerfile             # Imagen Docker del frontend
-    ├── src/
-    │   ├── components/        # Componentes React
-    │   ├── App.tsx            # Componente principal
-    │   └── api.ts             # Cliente API para comunicarse con el backend
-    └── package.json
+├── frontend/                  # Frontend (React + Vite)
+│   ├── Dockerfile             # Imagen Docker del frontend
+│   ├── src/
+│   │   ├── components/        # Componentes React
+│   │   ├── App.tsx            # Componente principal
+│   │   └── api.ts             # Cliente API para comunicarse con el backend
+│   └── package.json
+└── reports/                   # Reportes de seguridad
+    └── security/
+        ├── backend/           # Reportes de seguridad del backend
+        │   ├── backend_dependencies.md
+        │   ├── backend_dockerfile.md
+        │   └── backend_trivy.md
+        ├── db/                # Reportes de seguridad de la base de datos
+        │   └── postgres_trivy.md
+        └── frontend/          # Reportes de seguridad del frontend
+            ├── frontend_dependencies.md
+            ├── frontend_dockerfile.md
+            └── frontend_trivy.md
 ```
 
 ## Tecnologías Utilizadas

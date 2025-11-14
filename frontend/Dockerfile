@@ -24,17 +24,21 @@ WORKDIR /app
 
 # Crear usuario no root
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
 
-
-# Instalar serve para servir los archivos estáticos
-RUN npm install -g serve
+# Instalar solo serve para servir archivos estáticos (antes de cambiar al usuario no-root)
+RUN npm install -g serve@14.2.1
 
 # Copiar los archivos construidos desde el builder
 COPY --from=builder /app/dist ./dist
 
+# Cambiar permisos de la carpeta /app al usuario no-root
+RUN chown -R appuser:appgroup /app
+
+# Cambiar a usuario no-root
+USER appuser
+
 EXPOSE 5173
 
 # Servir la aplicación
-CMD ["serve", "-s", "dist", "-l", "5173"]
+CMD ["npx", "serve", "-s", "dist", "-l", "5173"]
 
