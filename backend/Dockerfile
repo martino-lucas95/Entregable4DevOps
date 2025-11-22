@@ -48,6 +48,10 @@ RUN npx prisma generate --schema=./prisma/schema.prisma
 # Copiar el código compilado (antes de cambiar al usuario no-root)
 COPY --from=builder /app/dist ./dist
 
+# Copiar el script de entrypoint y darle permisos
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 # Cambiar permisos de la carpeta /app al usuario no-root
 RUN chown -R appuser:appgroup /app
 
@@ -57,4 +61,4 @@ USER appuser
 EXPOSE 3000
 
 # Comando para ejecutar migraciones y luego iniciar la aplicación
-CMD ["sh", "-c", "if [ -d ./prisma/migrations ] && [ \"$(ls -A ./prisma/migrations 2>/dev/null)\" ]; then npx prisma migrate deploy --schema=./prisma/schema.prisma; else npx prisma db push --schema=./prisma/schema.prisma --accept-data-loss; fi && node dist/main.js"]
+CMD ["./entrypoint.sh"]
