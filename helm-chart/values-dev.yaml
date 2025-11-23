@@ -1,0 +1,68 @@
+# Development environment values
+environment: development
+
+backend:
+  replicaCount: 1
+  
+  image:
+    repository: entregable4devops-backend
+    tag: "latest"
+    pullPolicy: Always
+  
+  service:
+    type: NodePort
+    port: 3000
+    nodePort: 30001
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+frontend:
+  replicaCount: 1
+  
+  image:
+    repository: entregable4devops-frontend
+    tag: "latest"
+    pullPolicy: Always
+  
+  service:
+    type: NodePort
+    port: 5173
+    nodePort: 30002
+  
+  apiUrl: "http://localhost:30001"
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+postgresql:
+  enabled: true
+  
+  auth:
+    username: postgres
+    password: postgres_dev
+    database: stock_dev
+  
+  persistence:
+    enabled: false  # Use emptyDir for development
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+ingress:
+  enabled: false

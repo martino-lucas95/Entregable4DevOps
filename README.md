@@ -1,234 +1,311 @@
-# Sistema de Gestión de Stock
+# dive
+[![GitHub release](https://img.shields.io/github/release/wagoodman/dive.svg)](https://github.com/wagoodman/dive/releases/latest)
+[![Validations](https://github.com/wagoodman/dive/actions/workflows/validations.yaml/badge.svg)](https://github.com/wagoodman/dive/actions/workflows/validations.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
+[![License: MIT](https://img.shields.io/badge/License-MIT%202.0-blue.svg)](https://github.com/wagoodman/dive/blob/main/LICENSE)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat)](https://www.paypal.me/wagoodman)
 
-Sistema completo para gestionar movimientos de stock, permitiendo registrar entradas y salidas de productos y calcular en tiempo real el inventario disponible. Incluye una API REST con NestJS y un frontend con React.
+**A tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
 
-## Características
 
-- ✅ Creación y actualización de productos
-- ✅ Registro de movimientos de stock (entradas y salidas)
-- ✅ Cálculo de stock en tiempo real
-- ✅ Base de datos PostgreSQL con Prisma ORM
-- ✅ API REST con documentación Swagger
-- ✅ Frontend React con interfaz moderna
-- ✅ Docker y Docker Compose para fácil despliegue
+![Image](.data/demo.gif)
 
-## Requisitos Previos
+To analyze a Docker image simply run dive with an image tag/id/digest:
+```bash
+dive <your-image-tag>
+```
 
-- Docker
-- Docker Compose
+or you can dive with docker command directly
+```
+alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
+dive <your-image-tag>
 
-## Instalación y Ejecución
+# for example
+dive nginx:latest
+```
 
-### Paso 1: Clonar el repositorio (si aplica)
+or if you want to build your image then jump straight into analyzing it:
+```bash
+dive build -t <some-tag> .
+```
+
+Building on Macbook (supporting only the Docker container engine)
 
 ```bash
-git clone <url-del-repositorio>
-cd Entregable4DevOps
+docker run --rm -it \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v  "$(pwd)":"$(pwd)" \
+      -w "$(pwd)" \
+      -v "$HOME/.dive.yaml":"$HOME/.dive.yaml" \
+      wagoodman/dive:latest build -t <some-tag> .
 ```
 
-### Paso 2: Construir las imágenes Docker
+Additionally you can run this in your CI pipeline to ensure you're keeping wasted space to a minimum (this skips the UI):
+```
+CI=true dive <your-image>
+```
+
+![Image](.data/demo-ci.png)
+
+**This is beta quality!** *Feel free to submit an issue if you want a new feature or find a bug :)*
+
+## Basic Features
+
+**Show Docker image contents broken down by layer**
+
+As you select a layer on the left, you are shown the contents of that layer combined with all previous layers on the right. Also, you can fully explore the file tree with the arrow keys.
+
+**Indicate what's changed in each layer**
+
+Files that have changed, been modified, added, or removed are indicated in the file tree. This can be adjusted to show changes for a specific layer, or aggregated changes up to this layer.
+
+**Estimate "image efficiency"**
+
+The lower left pane shows basic layer info and an experimental metric that will guess how much wasted space your image contains. This might be from duplicating files across layers, moving files across layers, or not fully removing files. Both a percentage "score" and total wasted file space is provided.
+
+**Quick build/analysis cycles**
+
+You can build a Docker image and do an immediate analysis with one command:
+`dive build -t some-tag .`
+
+You only need to replace your `docker build` command with the same `dive build`
+command.
+
+**CI Integration**
+
+Analyze an image and get a pass/fail result based on the image efficiency and wasted space. Simply set `CI=true` in the environment when invoking any valid dive command.
+
+**Multiple Image Sources and Container Engines Supported**
+
+With the `--source` option, you can select where to fetch the container image from:
+```bash
+dive <your-image> --source <source>
+```
+or
+```bash
+dive <source>://<your-image>
+```
+
+With valid `source` options as such:
+- `docker`: Docker engine (the default option)
+- `docker-archive`: A Docker Tar Archive from disk
+- `podman`: Podman engine (linux only)
+
+## Installation
+
+**Ubuntu/Debian**
+
+Using debs:
+```bash
+DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -OL https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb
+sudo apt install ./dive_${DIVE_VERSION}_linux_amd64.deb
+```
+
+Using snap:
+```bash
+sudo snap install docker
+sudo snap install dive
+sudo snap connect dive:docker-executables docker:docker-executables
+sudo snap connect dive:docker-daemon docker:docker-daemon
+```
+
+**RHEL/Centos**
+```bash
+DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -OL https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm
+rpm -i dive_${DIVE_VERSION}_linux_amd64.rpm
+```
+
+**Arch Linux**
+
+Available in the [extra repository](https://archlinux.org/packages/extra/x86_64/dive/) and can be installed via [pacman](https://wiki.archlinux.org/title/Pacman):
 
 ```bash
-docker compose build
+pacman -S dive
 ```
 
-Este comando construye las imágenes para:
-- **Base de datos**: PostgreSQL 16
-- **API**: Backend NestJS con Prisma
-- **Frontend**: Aplicación React con Vite
+**Mac**
 
-### Paso 3: Levantar todos los servicios
+If you use [Homebrew](https://brew.sh):
 
 ```bash
-docker compose up -d
+brew install dive
 ```
 
-Este comando levanta todos los contenedores en segundo plano:
-- **PostgreSQL** en el puerto `5432`
-- **API Backend** en el puerto `3000`
-- **Frontend** en el puerto `5173`
-
-**Nota**: El Dockerfile de la API ejecuta las migraciones automáticamente antes de iniciar la aplicación usando el comando:
-```bash
-prisma migrate deploy --schema=./prisma/schema.prisma || prisma db push --schema=./prisma/schema.prisma --accept-data-loss
-```
-
-Si no hay migraciones creadas, usa `prisma db push` para sincronizar el schema directamente.
-
-### Paso 4: Verificar que todo esté funcionando
-
-Puedes verificar el estado de los contenedores con:
+If you use [MacPorts](https://www.macports.org):
 
 ```bash
-docker compose ps
+sudo port install dive
 ```
 
-Deberías ver tres contenedores corriendo:
-- `stock_db` (PostgreSQL)
-- `stock_api` (Backend NestJS)
-- `stock_frontend` (Frontend React)
+Or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
-### Paso 5: Acceder a los servicios
+**Windows**
 
-Una vez que todos los contenedores estén corriendo:
+Download the [latest release](https://github.com/wagoodman/dive/releases/latest).
 
-- **Frontend**: `http://localhost:5173` - Interfaz web para gestionar productos y movimientos
-- **API Backend**: `http://localhost:3000` - API REST
-- **Documentación Swagger**: `http://localhost:3000/api` - Documentación interactiva de la API
-- **Base de datos**: `localhost:5432` (usuario: `postgres`, contraseña: `postgres`, base: `stock`)
-
-### Comandos útiles
+**Go tools**
+Requires Go version 1.10 or higher.
 
 ```bash
-# Ver logs de todos los servicios
-docker compose logs
-
-# Ver logs de un servicio específico
-docker compose logs frontend
-docker compose logs api
-docker compose logs db
-
-# Ver logs en tiempo real
-docker compose logs -f
-
-# Detener todos los servicios
-docker compose down
-
-# Detener y eliminar volúmenes (incluyendo la base de datos)
-docker compose down -v
-
-# Reconstruir solo un servicio específico
-docker compose build frontend
-docker compose up -d frontend
+go get github.com/wagoodman/dive
 ```
+*Note*: installing in this way you will not see a proper version when running `dive -v`.
 
-### Paso 6: Probar la API
+**Nix/NixOS**
 
-Puedes usar la interfaz de Swagger en `http://localhost:3000/api` para probar todos los endpoints, o usar curl:
-
-#### Crear un producto:
+On NixOS:
 ```bash
-curl -X POST http://localhost:3000/products \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Producto Ejemplo",
-    "cost": 10.5,
-    "price": 15.99,
-    "barcode": "1234567890123"
-  }'
+nix-env -iA nixos.dive
 ```
-
-#### Crear un movimiento de entrada:
+On non-NixOS (Linux, Mac)
 ```bash
-curl -X POST http://localhost:3000/movements \
-  -H "Content-Type: application/json" \
-  -d '{
-    "productId": 1,
-    "type": "IN",
-    "quantity": 100
-  }'
+nix-env -iA nixpkgs.dive
 ```
 
-#### Consultar stock:
+**Docker**
 ```bash
-curl http://localhost:3000/stock
+docker pull wagoodman/dive
 ```
 
-## Endpoints Disponibles
-
-### Productos
-- `GET /products` - Obtener todos los productos
-- `GET /products/:id` - Obtener un producto por ID
-- `POST /products` - Crear un nuevo producto
-- `PATCH /products/:id` - Actualizar un producto
-- `DELETE /products/:id` - Eliminar un producto
-
-### Movimientos
-- `GET /movements` - Obtener todos los movimientos
-- `GET /movements/:id` - Obtener un movimiento por ID
-- `POST /movements` - Crear un nuevo movimiento (IN o OUT)
-
-### Stock
-- `GET /stock` - Obtener el stock de todos los productos
-- `GET /stock/:productId` - Obtener el stock de un producto específico
-
-## Estructura del Proyecto
-
-```
-.
-├── docker-compose.yml          # Configuración de Docker Compose (db, api, frontend)
-├── backend/                   # Backend (NestJS)
-│   ├── Dockerfile             # Imagen Docker de la API (incluye migraciones)
-│   ├── prisma/
-│   │   └── schema.prisma      # Schema de la base de datos
-│   └── src/
-│       ├── products/          # Módulo de productos
-│       ├── movements/         # Módulo de movimientos
-│       ├── stock/             # Módulo de stock
-│       └── prisma/            # Servicio de Prisma
-├── frontend/                  # Frontend (React + Vite)
-│   ├── Dockerfile             # Imagen Docker del frontend
-│   ├── src/
-│   │   ├── components/        # Componentes React
-│   │   ├── App.tsx            # Componente principal
-│   │   └── api.ts             # Cliente API para comunicarse con el backend
-│   └── package.json
-└── reports/                   # Reportes de seguridad
-    └── security/
-        ├── backend/           # Reportes de seguridad del backend
-        │   ├── backend_dependencies.md
-        │   ├── backend_dockerfile.md
-        │   └── backend_trivy.md
-        ├── db/                # Reportes de seguridad de la base de datos
-        │   └── postgres_trivy.md
-        └── frontend/          # Reportes de seguridad del frontend
-            ├── frontend_dependencies.md
-            ├── frontend_dockerfile.md
-            └── frontend_trivy.md
-```
-
-## Tecnologías Utilizadas
-
-### Backend
-- **NestJS** - Framework de Node.js
-- **PostgreSQL** - Base de datos relacional
-- **Prisma** - ORM para Node.js
-- **Swagger** - Documentación de API
-
-### Frontend
-- **React** - Biblioteca de JavaScript para interfaces de usuario
-- **TypeScript** - Superset tipado de JavaScript
-- **Vite** - Build tool y servidor de desarrollo
-- **Tailwind CSS** - Framework CSS utility-first
-
-### DevOps
-- **Docker**
-- **Docker Compose**
-
-## Notas Importantes
-
-- **Base de datos**: Se inicializa automáticamente al levantar los contenedores
-- **Migraciones**: Las migraciones de Prisma se ejecutan automáticamente en el `CMD` del Dockerfile antes de iniciar la API
-- **Dependencias**: Docker Compose espera a que la base de datos esté lista (healthcheck) antes de iniciar el contenedor de la API
-- **Persistencia**: Los datos persisten en un volumen de Docker llamado `postgres_data`
-- **Cálculo de stock**: El stock se calcula en tiempo real basándose en los movimientos (entradas - salidas)
-- **CORS**: El backend tiene CORS habilitado para permitir peticiones del frontend
-- **Variables de entorno**: El frontend usa `VITE_API_URL` (por defecto `http://localhost:3000`) para conectarse al backend
-
-### Ejecutar migraciones manualmente
-
-Si necesitas ejecutar migraciones manualmente:
+or
 
 ```bash
-docker compose exec api npx prisma migrate deploy --schema=./prisma/schema.prisma
+docker pull quay.io/wagoodman/dive
 ```
 
-### Solución de problemas
+When running you'll need to include the docker socket file:
+```bash
+docker run --rm -it \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    wagoodman/dive:latest <dive arguments...>
+```
 
-Si el frontend muestra datos antiguos o no se conecta al backend:
+Docker for Windows (showing PowerShell compatible line breaks; collapse to a single line for Command Prompt compatibility)
+```bash
+docker run --rm -it `
+    -v /var/run/docker.sock:/var/run/docker.sock `
+    wagoodman/dive:latest <dive arguments...>
+```
 
-1. Verifica que todos los contenedores estén corriendo: `docker compose ps`
-2. Reconstruye el frontend: `docker compose build frontend && docker compose up -d frontend`
-3. Revisa los logs: `docker compose logs frontend` y `docker compose logs api`
-4. Abre la consola del navegador (F12) para ver errores de conexión
-5. Verifica que la API esté respondiendo: `curl http://localhost:3000/products`
+**Note:** depending on the version of docker you are running locally you may need to specify the docker API version as an environment variable:
+```bash
+   DOCKER_API_VERSION=1.37 dive ...
+```
+or if you are running with a docker image:
+```bash
+docker run --rm -it \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -e DOCKER_API_VERSION=1.37 \
+    wagoodman/dive:latest <dive arguments...>
+```
+
+## CI Integration
+
+When running dive with the environment variable `CI=true` then the dive UI will be bypassed and will instead analyze your docker image, giving it a pass/fail indication via return code. Currently there are three metrics supported via a `.dive-ci` file that you can put at the root of your repo:
+```
+rules:
+  # If the efficiency is measured below X%, mark as failed.
+  # Expressed as a ratio between 0-1.
+  lowestEfficiency: 0.95
+
+  # If the amount of wasted space is at least X or larger than X, mark as failed.
+  # Expressed in B, KB, MB, and GB.
+  highestWastedBytes: 20MB
+
+  # If the amount of wasted space makes up for X% or more of the image, mark as failed.
+  # Note: the base image layer is NOT included in the total image size.
+  # Expressed as a ratio between 0-1; fails if the threshold is met or crossed.
+  highestUserWastedPercent: 0.20
+```
+You can override the CI config path with the `--ci-config` option.
+
+## KeyBindings
+
+Key Binding                                | Description
+-------------------------------------------|---------------------------------------------------------
+<kbd>Ctrl + C</kbd> or <kbd>Q</kbd>        | Exit
+<kbd>Tab</kbd>                             | Switch between the layer and filetree views
+<kbd>Ctrl + F</kbd>                        | Filter files
+<kbd>PageUp</kbd>                          | Scroll up a page
+<kbd>PageDown</kbd>                        | Scroll down a page
+<kbd>Ctrl + A</kbd>                        | Layer view: see aggregated image modifications
+<kbd>Ctrl + L</kbd>                        | Layer view: see current layer modifications
+<kbd>Space</kbd>                           | Filetree view: collapse/uncollapse a directory
+<kbd>Ctrl + Space</kbd>                    | Filetree view: collapse/uncollapse all directories
+<kbd>Ctrl + A</kbd>                        | Filetree view: show/hide added files
+<kbd>Ctrl + R</kbd>                        | Filetree view: show/hide removed files
+<kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
+<kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
+<kbd>Ctrl + B</kbd>                        | Filetree view: show/hide file attributes
+<kbd>PageUp</kbd>                          | Filetree view: scroll up a page
+<kbd>PageDown</kbd>                        | Filetree view: scroll down a page
+
+## UI Configuration
+
+No configuration is necessary, however, you can create a config file and override values:
+```yaml
+# supported options are "docker" and "podman"
+container-engine: docker
+# continue with analysis even if there are errors parsing the image archive
+ignore-errors: false
+log:
+  enabled: true
+  path: ./dive.log
+  level: info
+
+# Note: you can specify multiple bindings by separating values with a comma.
+# Note: UI hinting is derived from the first binding
+keybinding:
+  # Global bindings
+  quit: ctrl+c
+  toggle-view: tab
+  filter-files: ctrl+f, ctrl+slash
+
+  # Layer view specific bindings
+  compare-all: ctrl+a
+  compare-layer: ctrl+l
+
+  # File view specific bindings
+  toggle-collapse-dir: space
+  toggle-collapse-all-dir: ctrl+space
+  toggle-added-files: ctrl+a
+  toggle-removed-files: ctrl+r
+  toggle-modified-files: ctrl+m
+  toggle-unmodified-files: ctrl+u
+  toggle-filetree-attributes: ctrl+b
+  page-up: pgup
+  page-down: pgdn
+
+diff:
+  # You can change the default files shown in the filetree (right pane). All diff types are shown by default.
+  hide:
+    - added
+    - removed
+    - modified
+    - unmodified
+
+filetree:
+  # The default directory-collapse state
+  collapse-dir: false
+
+  # The percentage of screen width the filetree should take on the screen (must be >0 and <1)
+  pane-width: 0.5
+
+  # Show the file attributes next to the filetree
+  show-attributes: true
+
+layer:
+  # Enable showing all changes from this layer and every previous layer
+  show-aggregated-changes: false
+
+```
+
+dive will search for configs in the following locations:
+- `$XDG_CONFIG_HOME/dive/*.yaml`
+- `$XDG_CONFIG_DIRS/dive/*.yaml`
+- `~/.config/dive/*.yaml`
+- `~/.dive.yaml`
+
+`.yml` can be used instead of `.yaml` if desired.

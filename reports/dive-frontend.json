@@ -1,0 +1,144 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "blobs",
+      "digestId": "sha256:256f393e029fa2063d8c93720da36a74a032bed3355a2bc3e313ad12f8bde9d1",
+      "sizeBytes": 8317404,
+      "command": "ADD alpine-minirootfs-3.22.2-x86_64.tar.gz / # buildkit"
+    },
+    {
+      "index": 1,
+      "id": "blobs",
+      "digestId": "sha256:1548c3f692a15917d610e4556243c9144e5784ad6870fd0e4b4c2f7973c51837",
+      "sizeBytes": 120723160,
+      "command": "RUN /bin/sh -c addgroup -g 1000 node     \u0026\u0026 adduser -u 1000 -G node -s /bin/sh -D node     \u0026\u0026 apk add --no-cache         libstdc++     \u0026\u0026 apk add --no-cache --virtual .build-deps         curl     \u0026\u0026 ARCH= OPENSSL_ARCH='linux*' \u0026\u0026 alpineArch=\"$(apk --print-arch)\"       \u0026\u0026 case \"${alpineArch##*-}\" in         x86_64) ARCH='x64' CHECKSUM=\"3ea6ae2833f2d75e4d84731a9c01f50eff5198d78f724fa673281468e1c2077b\" OPENSSL_ARCH=linux-x86_64;;         x86) OPENSSL_ARCH=linux-elf;;         aarch64) OPENSSL_ARCH=linux-aarch64;;         arm*) OPENSSL_ARCH=linux-armv4;;         ppc64le) OPENSSL_ARCH=linux-ppc64le;;         s390x) OPENSSL_ARCH=linux-s390x;;         *) ;;       esac   \u0026\u0026 if [ -n \"${CHECKSUM}\" ]; then     set -eu;     curl -fsSLO --compressed \"https://unofficial-builds.nodejs.org/download/release/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz\";     echo \"$CHECKSUM  node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz\" | sha256sum -c -       \u0026\u0026 tar -xJf \"node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz\" -C /usr/local --strip-components=1 --no-same-owner       \u0026\u0026 ln -s /usr/local/bin/node /usr/local/bin/nodejs;   else     echo \"Building from source\"     \u0026\u0026 apk add --no-cache --virtual .build-deps-full         binutils-gold         g++         gcc         gnupg         libgcc         linux-headers         make         python3         py-setuptools     \u0026\u0026 export GNUPGHOME=\"$(mktemp -d)\"     \u0026\u0026 for key in       5BE8A3F6C8A5C01D106C0AD820B1A390B168D356       DD792F5973C6DE52C432CBDAC77ABFA00DDBF2B7       CC68F5A3106FF448322E48ED27F5E38D5B0A215F       8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600       890C08DB8579162FEE0DF9DB8BEAB4DFCF555EF4       C82FA3AE1CBEDC6BE46B9360C43CEC45C17AB93C       108F52B48DB57BB0CC439B2997B01419BD92F80A       A363A499291CBBC940DD62E41F10027AF002F8B0     ; do       { gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys \"$key\" \u0026\u0026 gpg --batch --fingerprint \"$key\"; } ||       { gpg --batch --keyserver keyserver.ubuntu.com --recv-keys \"$key\" \u0026\u0026 gpg --batch --fingerprint \"$key\"; } ;     done     \u0026\u0026 curl -fsSLO --compressed \"https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.xz\"     \u0026\u0026 curl -fsSLO --compressed \"https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc\"     \u0026\u0026 gpg --batch --decrypt --output SHASUMS256.txt SHASUMS256.txt.asc     \u0026\u0026 gpgconf --kill all     \u0026\u0026 rm -rf \"$GNUPGHOME\"     \u0026\u0026 grep \" node-v$NODE_VERSION.tar.xz\\$\" SHASUMS256.txt | sha256sum -c -     \u0026\u0026 tar -xf \"node-v$NODE_VERSION.tar.xz\"     \u0026\u0026 cd \"node-v$NODE_VERSION\"     \u0026\u0026 ./configure     \u0026\u0026 make -j$(getconf _NPROCESSORS_ONLN) V=     \u0026\u0026 make install     \u0026\u0026 apk del .build-deps-full     \u0026\u0026 cd ..     \u0026\u0026 rm -Rf \"node-v$NODE_VERSION\"     \u0026\u0026 rm \"node-v$NODE_VERSION.tar.xz\" SHASUMS256.txt.asc SHASUMS256.txt;   fi   \u0026\u0026 rm -f \"node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz\"   \u0026\u0026 find /usr/local/include/node/openssl/archs -mindepth 1 -maxdepth 1 ! -name \"$OPENSSL_ARCH\" -exec rm -rf {} \\;   \u0026\u0026 apk del .build-deps   \u0026\u0026 node --version   \u0026\u0026 npm --version   \u0026\u0026 rm -rf /tmp/* # buildkit"
+    },
+    {
+      "index": 2,
+      "id": "blobs",
+      "digestId": "sha256:a81608eb20afa0a3ec1887865e4a87be731d45f249afe8c377e782d882c61d32",
+      "sizeBytes": 5367147,
+      "command": "RUN /bin/sh -c apk add --no-cache --virtual .build-deps-yarn curl gnupg tar   \u0026\u0026 export GNUPGHOME=\"$(mktemp -d)\"   \u0026\u0026 for key in     6A010C5166006599AA17F08146C2130DFD2497F5   ; do     { gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys \"$key\" \u0026\u0026 gpg --batch --fingerprint \"$key\"; } ||     { gpg --batch --keyserver keyserver.ubuntu.com --recv-keys \"$key\" \u0026\u0026 gpg --batch --fingerprint \"$key\"; } ;   done   \u0026\u0026 curl -fsSLO --compressed \"https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz\"   \u0026\u0026 curl -fsSLO --compressed \"https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz.asc\"   \u0026\u0026 gpg --batch --verify yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz   \u0026\u0026 gpgconf --kill all   \u0026\u0026 rm -rf \"$GNUPGHOME\"   \u0026\u0026 mkdir -p /opt   \u0026\u0026 tar -xzf yarn-v$YARN_VERSION.tar.gz -C /opt/   \u0026\u0026 ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn   \u0026\u0026 ln -s /opt/yarn-v$YARN_VERSION/bin/yarnpkg /usr/local/bin/yarnpkg   \u0026\u0026 rm yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz   \u0026\u0026 apk del .build-deps-yarn   \u0026\u0026 yarn --version   \u0026\u0026 rm -rf /tmp/* # buildkit"
+    },
+    {
+      "index": 3,
+      "id": "blobs",
+      "digestId": "sha256:8bc61164599fb54ff026045916890640a9737e50bf04e71fd95ba6e467df40ad",
+      "sizeBytes": 388,
+      "command": "COPY docker-entrypoint.sh /usr/local/bin/ # buildkit"
+    },
+    {
+      "index": 4,
+      "id": "blobs",
+      "digestId": "sha256:7867cfffa6289b5ac3b66faac225891da0e243562fa6dbdadd6e646cdb0da400",
+      "sizeBytes": 0,
+      "command": "WORKDIR /app"
+    },
+    {
+      "index": 5,
+      "id": "blobs",
+      "digestId": "sha256:5dc9777b751ad4e2b985966c2a19b49ad6c9b3833bee45e8f61b6fd96a57c795",
+      "sizeBytes": 3219,
+      "command": "RUN /bin/sh -c addgroup -S appgroup \u0026\u0026 adduser -S appuser -G appgroup # buildkit"
+    },
+    {
+      "index": 6,
+      "id": "blobs",
+      "digestId": "sha256:520874d2849b513c47e29c0accaa342a970bee979da72a18896912d401bbb4e3",
+      "sizeBytes": 12895362,
+      "command": "RUN /bin/sh -c npm install -g serve@14.2.1 # buildkit"
+    },
+    {
+      "index": 7,
+      "id": "blobs",
+      "digestId": "sha256:c6f6d83ef2c2754c9a599be81cbb5dd7e9a7528f70884b3d088d9f8e9db6dcda",
+      "sizeBytes": 210063,
+      "command": "COPY /app/dist ./dist # buildkit"
+    },
+    {
+      "index": 8,
+      "id": "blobs",
+      "digestId": "sha256:fa4e931cccba9bf134384b57a28ac378a3114c15f20ee35ec8747bc93632664a",
+      "sizeBytes": 210063,
+      "command": "RUN /bin/sh -c chown -R appuser:appgroup /app # buildkit"
+    }
+  ],
+  "image": {
+    "sizeBytes": 147726806,
+    "inefficientBytes": 506882,
+    "efficiencyScore": 0.9981847979573862,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 418646,
+        "file": "/app/dist/assets/index-6r5rZapi.js"
+      },
+      {
+        "count": 3,
+        "sizeBytes": 47781,
+        "file": "/lib/apk/db/installed"
+      },
+      {
+        "count": 3,
+        "sizeBytes": 30720,
+        "file": "/lib/apk/db/scripts.tar"
+      },
+      {
+        "count": 3,
+        "sizeBytes": 2227,
+        "file": "/etc/passwd"
+      },
+      {
+        "count": 3,
+        "sizeBytes": 1587,
+        "file": "/etc/group"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1480,
+        "file": "/app/dist/index.html"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1441,
+        "file": "/etc/passwd-"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1066,
+        "file": "/etc/group-"
+      },
+      {
+        "count": 3,
+        "sizeBytes": 861,
+        "file": "/etc/shadow"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 546,
+        "file": "/etc/shadow-"
+      },
+      {
+        "count": 3,
+        "sizeBytes": 285,
+        "file": "/lib/apk/db/triggers"
+      },
+      {
+        "count": 3,
+        "sizeBytes": 242,
+        "file": "/etc/apk/world"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/tar"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/etc"
+      }
+    ]
+  }
+}

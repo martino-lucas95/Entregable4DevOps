@@ -1,0 +1,140 @@
+# Default values for stock-management.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+environment: development
+nameOverride: ""
+fullnameOverride: ""
+
+# Backend configuration
+backend:
+  replicaCount: 2
+  
+  image:
+    repository: entregable4devops-backend
+    tag: "1.0"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  
+  service:
+    type: ClusterIP
+    port: 3000
+    nodePort: null
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Frontend configuration
+frontend:
+  replicaCount: 2
+  
+  image:
+    repository: entregable4devops-frontend
+    tag: "1.0"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  
+  service:
+    type: ClusterIP
+    port: 5173
+    nodePort: null
+  
+  # API URL that frontend will use to connect to backend
+  apiUrl: "http://localhost:3000"
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  
+  auth:
+    username: postgres
+    password: postgres
+    database: stock
+  
+  service:
+    port: 5432
+  
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: ""
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: stock-management.local
+      paths:
+        - path: /
+          pathType: Prefix
+          backend: frontend
+        - path: /api
+          pathType: Prefix
+          backend: backend
+  tls: []
+  #  - secretName: stock-management-tls
+  #    hosts:
+  #      - stock-management.local
