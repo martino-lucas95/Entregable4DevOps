@@ -12,7 +12,7 @@ COPY package*.json ./
 RUN npm install && npm cache clean --force
 
 # Generar cliente de Prisma (el schema está en ./prisma)
-RUN npx prisma generate --schema=./prisma/schema.prisma
+RUN NODE_TLS_REJECT_UNAUTHORIZED=0 npx prisma generate --schema=./prisma/schema.prisma
 
 # Copiar el resto del código fuente
 COPY . .
@@ -43,7 +43,7 @@ RUN npm install --omit=dev && npm cache clean --force
 COPY prisma ./prisma
 
 # Generar el cliente de Prisma en producción (antes de cambiar al usuario no-root)
-RUN npx prisma generate --schema=./prisma/schema.prisma
+RUN NODE_TLS_REJECT_UNAUTHORIZED=0 npx prisma generate --schema=./prisma/schema.prisma
 
 # Copiar el código compilado (antes de cambiar al usuario no-root)
 COPY --from=builder /app/dist ./dist

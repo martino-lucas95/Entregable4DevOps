@@ -1,0 +1,14 @@
+apiVersion: v2
+name: stock-management
+description: A Helm chart for Stock Management System with Backend API, Frontend and PostgreSQL database
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - stock-management
+  - nestjs
+  - react
+  - postgresql
+maintainers:
+  - name: DevOps Team
+    email: devops@example.com

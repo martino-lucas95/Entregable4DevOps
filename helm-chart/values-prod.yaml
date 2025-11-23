@@ -1,0 +1,101 @@
+# Production environment values
+environment: production
+
+backend:
+  replicaCount: 3
+  
+  image:
+    repository: your-registry.com/entregable4devops-backend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+    pullSecrets:
+      - name: registry-secret
+  
+  service:
+    type: ClusterIP
+    port: 3000
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  livenessProbe:
+    initialDelaySeconds: 90
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
+  
+  readinessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
+
+frontend:
+  replicaCount: 3
+  
+  image:
+    repository: your-registry.com/entregable4devops-frontend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+    pullSecrets:
+      - name: registry-secret
+  
+  service:
+    type: ClusterIP
+    port: 5173
+  
+  apiUrl: "https://api.stock-management.example.com"
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+postgresql:
+  enabled: true
+  
+  auth:
+    username: postgres
+    password: CHANGE_ME_IN_SECRE
+    database: stock_prod
+  
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: "fast-ssd"  
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: stock-management.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend: frontend
+        - path: /api
+          pathType: Prefix
+          backend: backend
+  tls:
+    - secretName: stock-management-tls
+      hosts:
+        - stock-management.example.com
