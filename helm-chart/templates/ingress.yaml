@@ -33,9 +33,9 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ if eq .backend "frontend" }}{{ include "stock-management.fullname" $ }}-frontend{{ else }}{{ include "stock-management.fullname" $ }}-backend{{ end }}
+                name: {{ if eq .backend "frontend" }}{{ include "stock-management.fullname" $ }}-frontend{{ else if eq .backend "grafana" }}{{ include "stock-management.fullname" $ }}-grafana{{ else }}{{ include "stock-management.fullname" $ }}-backend{{ end }}
                 port:
-                  number: {{ if eq .backend "frontend" }}{{ $.Values.frontend.service.port }}{{ else }}{{ $.Values.backend.service.port }}{{ end }}
+                  number: {{ if eq .backend "frontend" }}{{ $.Values.frontend.service.port }}{{ else if eq .backend "grafana" }}{{ $.Values.grafana.service.port }}{{ else }}{{ $.Values.backend.service.port }}{{ end }}
           {{- end }}
     {{- end }}
 {{- end }}

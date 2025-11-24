@@ -10,18 +10,18 @@ fullnameOverride: ""
 # Backend configuration
 backend:
   replicaCount: 2
-  
+
   image:
-    repository: entregable4devops-backend
-    tag: "1.0"
+    repository: stock-backend
+    tag: "v2.3-monitoring"
     pullPolicy: IfNotPresent
     pullSecrets: []
-  
+
   service:
     type: ClusterIP
     port: 3000
     nodePort: null
-  
+
   resources:
     limits:
       cpu: 500m
@@ -29,19 +29,19 @@ backend:
     requests:
       cpu: 250m
       memory: 256Mi
-  
+
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  
+
   readinessProbe:
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  
+
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -49,21 +49,20 @@ backend:
 # Frontend configuration
 frontend:
   replicaCount: 2
-  
+
   image:
     repository: entregable4devops-frontend
     tag: "1.0"
     pullPolicy: IfNotPresent
     pullSecrets: []
-  
+
   service:
     type: ClusterIP
     port: 5173
     nodePort: null
-  
-  # API URL that frontend will use to connect to backend
+
   apiUrl: "http://localhost:3000"
-  
+
   resources:
     limits:
       cpu: 200m
@@ -71,19 +70,19 @@ frontend:
     requests:
       cpu: 100m
       memory: 128Mi
-  
+
   livenessProbe:
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  
+
   readinessProbe:
     initialDelaySeconds: 15
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  
+
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -91,25 +90,25 @@ frontend:
 # PostgreSQL configuration
 postgresql:
   enabled: true
-  
+
   image:
     repository: postgres
     tag: "16-alpine"
     pullPolicy: IfNotPresent
-  
+
   auth:
     username: postgres
     password: postgres
     database: stock
-  
+
   service:
     port: 5432
-  
+
   persistence:
     enabled: true
     size: 2Gi
     storageClass: ""
-  
+
   resources:
     limits:
       cpu: 500m
@@ -123,18 +122,62 @@ ingress:
   enabled: false
   className: "nginx"
   annotations:
-    # nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     # cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
     - host: stock-management.local
       paths:
-        - path: /
-          pathType: Prefix
+        - path: /()(.*)
+          pathType: ImplementationSpecific
           backend: frontend
-        - path: /api
-          pathType: Prefix
+        - path: /api(/|$)(.*)
+          pathType: ImplementationSpecific
           backend: backend
+    - host: grafana.stock-management.local
+      paths:
+        - path: /()(.*)
+          pathType: ImplementationSpecific
+          backend: grafana
   tls: []
   #  - secretName: stock-management-tls
   #    hosts:
   #      - stock-management.local
+
+# Prometheus Configuration
+prometheus:
+  enabled: true
+  image:
+    repository: prom/prometheus
+    tag: v2.48.0
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 9090
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  scrapeInterval: 15s
+
+# Grafana Configuration
+grafana:
+  enabled: true
+  image:
+    repository: grafana/grafana
+    tag: 10.2.2
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 80
+  adminUser: admin
+  adminPassword: admin
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
