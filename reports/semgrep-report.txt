@@ -1,0 +1,98 @@
+Comando ejecutado:
+docker run --rm -v "$(pwd):/src" semgrep/semgrep semgrep --config=auto --text /src/backend /src/frontend --exclude="node_modules" --exclude="dist" --exclude="build" --exclude=".git" > /Users/matoferreira/Documents/Repos/Entregable4DevOps/reports/semgrep-report.txt
+
+running 1063 rules from 1 config remote-registry_0
+Rules:
+<SKIPPED DATA (too many entries; use --max-log-list-entries)>
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 69 files tracked by git with 1063 Code rules:
+                                                                                                                        
+  Language      Rules   Files          Origin      Rules                                                                
+ ─────────────────────────────        ───────────────────                                                               
+  <multilang>      61      69          Community    1063                                                                
+  ts              166      50                                                                                           
+  json              4       7                                                                                           
+  dockerfile        6       2                                                                                           
+  js              156       1                                                                                           
+  bash              4       1                                                                                           
+  html              1       1                                                                                           
+                                                                                                                        
+SCA findings adjustment: No SCA rules to adjust
+                  
+                  
+┌────────────────┐
+│ 1 Code Finding │
+└────────────────┘
+                            
+    /src/frontend/index.html
+    ❯❱ html.security.audit.missing-integrity.missing-integrity
+          This tag is missing an 'integrity' subresource integrity attribute. The 'integrity' attribute allows
+          for the browser to verify that externally hosted files (for example from a CDN) are delivered       
+          without unexpected manipulation. Without this attribute, if an attacker can modify the externally   
+          hosted resource, this could lead to XSS and other types of attacks. To prevent this, include the    
+          base64-encoded cryptographic hash of the resource (file) you’re telling the browser to fetch in the 
+          'integrity' attribute for all externally hosted files.                                              
+          Details: https://sg.run/krXA                                                                        
+                                                                                                              
+            9┆ <script src="https://cdn.tailwindcss.com"></script>
+
+
+========================================
+Files skipped:
+========================================
+
+  Always skipped by Semgrep:
+
+   • <none>
+
+  Skipped by .gitignore:
+  (Disable by passing --no-git-ignore)
+
+   • <all files not listed by `git ls-files` were skipped>
+
+  Skipped by .semgrepignore:
+  - https://semgrep.dev/docs/ignoring-files-folders-code/#understand-semgrep-defaults
+
+   • /src/backend/test/app.e2e-spec.ts
+   • /src/backend/test/jest-e2e.json
+
+  Skipped by --include patterns:
+
+   • <none>
+
+  Skipped by --exclude patterns:
+
+   • <none>
+
+  Files that couldn't be accessed:
+
+   • <none>
+
+  Skipped by limiting to files smaller than 1000000 bytes:
+  (Adjust with the --max-target-bytes flag)
+
+   • <none>
+
+  Partially analyzed due to parsing or internal Semgrep errors
+
+   • <none>
+
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 1 (1 blocking)
+ • Rules run: 240
+ • Targets scanned: 69
+ • Parsed lines: ~100.0%
+ • Scan skipped: 
+   ◦ Files matching .semgrepignore patterns: 2
+ • Scan was limited to files tracked by git
+Ran 240 rules on 69 files: 1 finding.
+Sending pseudonymous metrics since metrics are configured to AUTO, registry usage is True, and login status is False
