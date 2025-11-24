@@ -1,0 +1,38 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-root-containers
+  annotations:
+    policies.kyverno.io/title: Prohibir ejecución de contenedores como root
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Los contenedores no deben ejecutarse como usuario root (UID 0) para
+      reducir el riesgo de escalada de privilegios y cumplir con el principio
+      de menor privilegio.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+    - name: validate-run-as-non-root
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "No se permite ejecutar contenedores como root. Define runAsNonRoot: true en securityContext."
+        foreach:
+          - list: "request.object.spec.containers"
+            pattern:
+              securityContext:
+                runAsNonRoot: true
+          - list: "request.object.spec.initContainers"
+            pattern:
+              securityContext:
+                runAsNonRoot: true
+          - list: "request.object.spec.ephemeralContainers"
+            pattern:
+              securityContext:
+                runAsNonRoot: true

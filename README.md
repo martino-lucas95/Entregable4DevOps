@@ -622,6 +622,83 @@ Las vulnerabilidades detectadas de librerías productivas son de riesgo bajo y n
 
 Por lo tanto, se acepta este riesgo para esta etapa inicial de la aplicación, con el compromiso de monitorear y actualizar las dependencias en futuras iteraciones.
 
+### Políticas de Seguridad en Kubernetes (Kyverno)
+
+Kyverno es un motor de políticas de seguridad para Kubernetes que permite definir políticas como código. Se utiliza para aplicar controles de seguridad, buenas prácticas y compliance en el cluster.
+
+#### Instalación de Kyverno
+
+Para instalar Kyverno en el cluster, ejecuta uno de los siguientes scripts desde la raíz del proyecto:
+
+**Linux/macOS:**
+```bash
+./install-kyverno.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+.\install-kyverno.ps1
+```
+
+El script realiza las siguientes acciones:
+1. Verifica la conexión al cluster de Kubernetes
+2. Agrega el repositorio oficial de Helm de Kyverno
+3. Instala Kyverno en el namespace `kyverno`
+4. Verifica que la instalación sea exitosa
+
+#### Verificación de la Instalación
+
+Después de la instalación, verifica que Kyverno esté funcionando correctamente:
+
+```bash
+# Verificar pods de Kyverno
+kubectl get pods -n kyverno
+
+# Verificar políticas instaladas
+kubectl get clusterpolicies
+kubectl get policies --all-namespaces
+```
+
+#### Políticas Implementadas
+
+El proyecto incluye las siguientes políticas de seguridad que se aplican a nivel de cluster:
+
+1. **Prohibir Imágenes con Tag Latest** (`disallow-latest-tag.yaml`)
+   - Prohíbe el uso de imágenes con tag `latest` para garantizar reproducibilidad
+   - Requiere tags específicos o digests
+
+2. **Requerir Límites de Recursos** (`require-resource-limits.yaml`)
+   - Exige límites de CPU y memoria en todos los pods
+   - Previene consumo excesivo de recursos
+
+3. **Prohibir Ejecución como Root** (`disallow-root-containers.yaml`)
+   - Impide que contenedores se ejecuten como root (UID 0)
+   - Reduce riesgo de escalada de privilegios
+
+4. **Requerir Labels Obligatorios** (`require-labels.yaml`)
+   - Requiere labels `app`, `version`, y `environment` en todos los pods
+   - Facilita organización y monitoreo
+
+#### Estructura de Políticas
+
+Las políticas de Kyverno se almacenan en el directorio `kyverno/policies/`. Para aplicar todas las políticas:
+
+```bash
+# Aplicar todas las políticas
+kubectl apply -f kyverno/policies/
+
+# Verificar políticas aplicadas
+kubectl get clusterpolicies
+
+# Ver detalles de una política
+kubectl describe clusterpolicy disallow-latest-tag
+```
+
+**Recursos:**
+- [Documentación de Kyverno](./kyverno/README.md)
+- [Documentación oficial de Kyverno](https://kyverno.io/docs/)
+- [Ejemplos de políticas](https://kyverno.io/policies/)
+
 ### Reportes de Seguridad
 
 - [Backend Dockerfile](./reports/backend/backend_dockerfile.md)

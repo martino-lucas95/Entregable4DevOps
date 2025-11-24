@@ -1,0 +1,53 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Prohibir uso de imágenes con tag latest
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Las imágenes con tag 'latest' pueden causar problemas de reproducibilidad
+      y seguridad. Esta política requiere que todas las imágenes especifiquen
+      un tag específico o digest.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+    - name: require-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Se requiere una etiqueta de imagen."
+        foreach:
+          - list: "request.object.spec.containers"
+            pattern:
+              image: "*:*"
+          - list: "request.object.spec.initContainers"
+            pattern:
+              image: "*:*"
+          - list: "request.object.spec.ephemeralContainers"
+            pattern:
+              image: "*:*"
+    - name: validate-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "No se permite el uso de la etiqueta de imagen mutable 'latest'."
+        foreach:
+          - list: "request.object.spec.containers"
+            pattern:
+              image: "!*:latest"
+          - list: "request.object.spec.initContainers"
+            pattern:
+              image: "!*:latest"
+          - list: "request.object.spec.ephemeralContainers"
+            pattern:
+              image: "!*:latest"

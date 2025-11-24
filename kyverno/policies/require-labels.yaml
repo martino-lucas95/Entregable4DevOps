@@ -1,0 +1,30 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-labels
+  annotations:
+    policies.kyverno.io/title: Requerir labels obligatorios
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Todos los pods deben tener labels obligatorios para facilitar la
+      organización, monitoreo y gestión de recursos en el cluster.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+    - name: check-required-labels
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Todos los pods deben tener los labels obligatorios: app, version, y environment."
+        pattern:
+          metadata:
+            labels:
+              app: "?*"
+              version: "?*"
+              environment: "?*"
