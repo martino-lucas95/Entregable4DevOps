@@ -550,6 +550,10 @@ trivy image entregable4devops-frontend:1.0
 
 # Análisis estático de código fuente
 docker run --rm -v "$(pwd):/src" semgrep/semgrep semgrep --config=auto --text /src/backend /src/frontend
+
+# Análisis de dependencias (SCA) con Checkmarx One
+# El escaneo se realiza incluyendo dependencias de desarrollo y testing
+# Luego se excluyen para obtener el reporte final de producción
 ```
 
 ### Vulnerabilidades Detectadas
@@ -582,6 +586,42 @@ Por lo tanto, este es un riesgo real pero de baja probabilidad, se trata como un
 - **Regla:** `html.security.audit.missing-integrity.missing-integrity`
 - **Reporte completo:** [semgrep-report.txt](./reports/semgrep-report.txt)
 
+#### 2. Vulnerabilidades en Dependencias (SCA)
+
+**Detectado por:** Checkmarx One (SCA)  
+**Severidad:** Bajo (2 High, 1 Medium, 1 Low)  
+**Estado:** Aceptado (riesgo no crítico)
+
+Se realizó un escaneo de análisis de composición de software (SCA) utilizando Checkmarx One para identificar vulnerabilidades en las dependencias del proyecto.
+
+**Proceso de análisis:**
+
+1. **Escaneo inicial:** Se ejecutó un escaneo completo incluyendo todas las dependencias, incluyendo las de desarrollo y testing.
+   - **Reporte:** [Checkmarx-SCA-report-with-devtest-dependencies.json](./reports/Checkmarx-SCA-report-with-devtest-dependencies.json)
+
+2. **Escaneo final:** Se excluyeron las dependencias de desarrollo y testing para obtener un reporte enfocado en las dependencias de producción.
+   - **Reporte:** [Checkmarx-SCA-Report-Final.json](./reports/Checkmarx-SCA-Report-Final.json)
+
+**Resultados del escaneo final:**
+- **Vulnerabilidades críticas:** 0
+- **Vulnerabilidades altas:** 2
+- **Vulnerabilidades medias:** 1
+- **Vulnerabilidades bajas:** 1
+- **Paquetes vulnerables:** 4 de 769 totales
+- **Score de riesgo:** 7.5
+
+**Vulnerabilidades detectadas:**
+- `glob@10.4.5` (High) - CVE-2025-64756: Command injection vulnerability
+- `inflight@1.0.6` (High) - Memory leak issue
+- `tmp@0.0.33` (Medium) - CVE-2025-54798: Arbitrary temporary file write
+- `debug@2.6.9` (Low) - ReDoS vulnerability
+
+**Conclusión:**
+
+Las vulnerabilidades detectadas de librerías productivas son de riesgo bajo y no representan un riesgo crítico para el desarrollo y operación de la aplicación en su etapa actual. Las vulnerabilidades de alta severidad están relacionadas con paquetes que no se utilizan directamente en producción.
+
+Por lo tanto, se acepta este riesgo para esta etapa inicial de la aplicación, con el compromiso de monitorear y actualizar las dependencias en futuras iteraciones.
+
 ### Reportes de Seguridad
 
 - [Backend Dockerfile](./reports/backend/backend_dockerfile.md)
@@ -590,6 +630,8 @@ Por lo tanto, este es un riesgo real pero de baja probabilidad, se trata como un
 - [Frontend Dependencies](./reports/frontend/frontend_dependencies.md)
 - [Trivy Scans](./reports/)
 - [Semgrep Report](./reports/semgrep-report.txt) - Análisis estático de código fuente
+- [Checkmarx SCA Report (con dependencias dev/test)](./reports/Checkmarx-SCA-report-with-devtest-dependencies.json) - Análisis SCA completo
+- [Checkmarx SCA Report (producción)](./reports/Checkmarx-SCA-Report-Final.json) - Análisis SCA sin dependencias de desarrollo
 
 ## 📚 Documentación
 
