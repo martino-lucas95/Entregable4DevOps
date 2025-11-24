@@ -17,6 +17,7 @@ Sistema de gestión de stock con stack completo de DevOps: contenedorización, o
 - [Análisis de Calidad](#análisis-de-calidad)
 - [CI/CD Pipeline](#cicd-pipeline)
 - [Monitoreo y Métricas](#monitoreo-y-métricas)
+- [Seguridad](#seguridad)
 - [Documentación](#documentación)
 
 ## 🎯 Descripción
@@ -528,7 +529,11 @@ Independientemente del resultado del pipeline:
 
 ## 🔐 Seguridad
 
+Esta sección documenta los análisis de seguridad realizados, las vulnerabilidades detectadas y las medidas de mitigación implementadas.
+
 ### Análisis de Vulnerabilidades
+
+El proyecto utiliza múltiples herramientas para detectar vulnerabilidades en diferentes capas:
 
 ```bash
 # Backend dependencies
@@ -542,15 +547,49 @@ npm audit
 # Docker images
 trivy image entregable4devops-backend:1.0
 trivy image entregable4devops-frontend:1.0
+
+# Análisis estático de código fuente
+docker run --rm -v "$(pwd):/src" semgrep/semgrep semgrep --config=auto --text /src/backend /src/frontend
 ```
+
+### Vulnerabilidades Detectadas
+
+#### 1. Falta de Atributo de Integridad (SRI) en Recursos Externos
+
+**Detectado por:** Semgrep  
+**Severidad:** Media  
+**Estado:** Aceptado (riesgo controlado)
+
+##### ¿Es explotable?
+Debido a que no hay un atributo de integridad (SRI - Subresource Integrity), el navegador ejecutará cualquier JavaScript que provenga de:
+
+- `https://cdn.tailwindcss.com`
+- `https://aistudiocdn.com/react@^19.2.0`
+- `https://aistudiocdn.com/react-dom@^19.2.0/...`
+
+Si un atacante ejecuta un ataque de cadena de suministros, tomando control sobre estos proveedores puede devolver JavaScript malicioso.
+
+**Conclusión:**
+
+✅ **Sí, es explotable**, pero solo si un atacante puede comprometer o interceptar esos recursos de terceros (compromiso del CDN, secuestro de DNS, certificado TLS mal emitido, cuenta del CDN comprometida, etc.), lo cual si bien puede pasar, tiene baja probabilidad.
+
+❌ Un atacante normal no puede abusar de esto directamente solo enviando una URL o entrada manipulada a la aplicación. Necesitarían control sobre el CDN o el DNS.
+
+Por lo tanto, este es un riesgo real pero de baja probabilidad, se trata como un problema de cadena de suministro / defensa en profundidad. Por esta razón, aceptamos este riesgo para esta etapa inicial de la aplicación.
+
+**Detalles del hallazgo:**
+- **Archivo:** `frontend/index.html`
+- **Regla:** `html.security.audit.missing-integrity.missing-integrity`
+- **Reporte completo:** [semgrep-report.txt](./reports/semgrep-report.txt)
 
 ### Reportes de Seguridad
 
-- [Backend Dockerfile](./reports/security/backend/backend_dockerfile.md)
-- [Frontend Dockerfile](./reports/security/frontend/frontend_dockerfile.md)
-- [Backend Dependencies](./reports/security/backend/backend_dependencies.md)
-- [Frontend Dependencies](./reports/security/frontend/frontend_dependencies.md)
-- [Trivy Scans](./reports/security/)
+- [Backend Dockerfile](./reports/backend/backend_dockerfile.md)
+- [Frontend Dockerfile](./reports/frontend/frontend_dockerfile.md)
+- [Backend Dependencies](./reports/backend/backend_dependencies.md)
+- [Frontend Dependencies](./reports/frontend/frontend_dependencies.md)
+- [Trivy Scans](./reports/)
+- [Semgrep Report](./reports/semgrep-report.txt) - Análisis estático de código fuente
 
 ## 📚 Documentación
 
