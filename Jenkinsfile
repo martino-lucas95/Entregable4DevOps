@@ -85,9 +85,7 @@ pipeline {
                         }?.size() ?: 0
                         
                         if (criticalIssues > 0) {
-                            echo "WARNING: Found ${criticalIssues} critical issues in static analysis"
-                            // Uncomment to fail on critical issues:
-                            // error("Critical security issues found. Pipeline aborted.")
+                            error("CRITICAL SECURITY ISSUES FOUND: ${criticalIssues} critical issues detected in static analysis. Pipeline aborted for security reasons.")
                         } else {
                             echo "No critical issues found in static analysis"
                         }
@@ -182,7 +180,7 @@ pipeline {
                         if (!params.SKIP_TESTS) {
                             sh '''
                                 echo "Running tests..."
-                                npm run test -- --coverage || true
+                                npm run test -- --coverage
                             '''
                             
                             // Archive test results
@@ -222,7 +220,7 @@ pipeline {
                         if (!params.SKIP_TESTS) {
                             sh '''
                                 echo "Running tests..."
-                                npm run test || true
+                                npm run test
                             '''
                         }
                         
@@ -305,18 +303,52 @@ pipeline {
                     
                     // Check for critical vulnerabilities
                     script {
-                        def backendScan = sh(
-                            script: "trivy image --format json --quiet ${BACKEND_IMAGE}:${IMAGE_TAG}",
-                            returnStdout: true
-                        )
-                        def frontendScan = sh(
-                            script: "trivy image --format json --quiet ${FRONTEND_IMAGE}:${IMAGE_TAG}",
-                            returnStdout: true
-                        )
-                        
-                        // Parse and check for critical vulnerabilities
-                        // If critical vulnerabilities found, fail the pipeline
-                        echo "Image vulnerability scan completed. Check Trivy reports for details."
+                        try {
+                            def backendReport = readJSON file: 'trivy-backend-image.json'
+                            def frontendReport = readJSON file: 'trivy-frontend-image.json'
+                            
+                            // Count critical vulnerabilities from Trivy JSON structure
+                            def backendCritical = 0
+                            def frontendCritical = 0
+                            
+                            // Parse backend report
+                            if (backendReport.Results) {
+                                backendReport.Results.each { result ->
+                                    if (result.Vulnerabilities) {
+                                        result.Vulnerabilities.each { vuln ->
+                                            if (vuln.Severity == 'CRITICAL') {
+                                                backendCritical++
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Parse frontend report
+                            if (frontendReport.Results) {
+                                frontendReport.Results.each { result ->
+                                    if (result.Vulnerabilities) {
+                                        result.Vulnerabilities.each { vuln ->
+                                            if (vuln.Severity == 'CRITICAL') {
+                                                frontendCritical++
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            def totalCritical = backendCritical + frontendCritical
+                            
+                            if (totalCritical > 0) {
+                                error("CRITICAL VULNERABILITIES FOUND IN DOCKER IMAGES: ${totalCritical} critical vulnerabilities detected (Backend: ${backendCritical}, Frontend: ${frontendCritical}). Pipeline aborted for security reasons.")
+                            } else {
+                                echo "No critical vulnerabilities found in Docker images. Scan completed successfully."
+                            }
+                        } catch (Exception e) {
+                            echo "Warning: Could not parse Trivy reports: ${e.message}"
+                            echo "Image vulnerability scan completed. Check Trivy reports for details."
+                            // Don't fail pipeline if parsing fails, but log the error
+                        }
                     }
                 }
             }
