@@ -56,26 +56,38 @@ pipeline {
                     
                     // Install Semgrep if not available
                     sh '''
-                        if ! command -v semgrep &> /dev/null; then
+                        set -e
+                        if command -v semgrep &> /dev/null; then
+                            echo "Semgrep already installed at $(command -v semgrep)"
+                            semgrep --version
+                        else
                             echo "Installing Semgrep..."
                             # Try pipx first (recommended for CLI tools)
                             if command -v pipx &> /dev/null; then
                                 pipx install semgrep
+                            elif command -v apt-get &> /dev/null; then
+                                # For Debian/Ubuntu systems
+                                apt-get update && apt-get install -y semgrep || {
+                                    echo "apt-get installation failed, trying pip3..."
+                                    pip3 install --break-system-packages semgrep || {
+                                        echo "Creating virtual environment for semgrep..."
+                                        python3 -m venv /tmp/semgrep-venv
+                                        /tmp/semgrep-venv/bin/pip install semgrep
+                                        ln -sf /tmp/semgrep-venv/bin/semgrep /usr/local/bin/semgrep
+                                    }
+                                }
                             else
                                 # Fallback: use pip3 with --break-system-packages flag or via venv
-                                if python3 -m venv --help > /dev/null 2>&1; then
+                                pip3 install --break-system-packages semgrep || {
                                     echo "Creating virtual environment for semgrep..."
                                     python3 -m venv /tmp/semgrep-venv
                                     /tmp/semgrep-venv/bin/pip install semgrep
                                     ln -sf /tmp/semgrep-venv/bin/semgrep /usr/local/bin/semgrep
-                                else
-                                    # Last resort: use pip3 with --break-system-packages
-                                    pip3 install --break-system-packages semgrep
-                                fi
+                                }
                             fi
-                        else
-                            echo "Semgrep already installed at $(command -v semgrep)"
                         fi
+                        echo "Verifying semgrep installation..."
+                        semgrep --version
                     '''
                     
                     // Run Semgrep analysis
