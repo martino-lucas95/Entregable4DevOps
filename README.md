@@ -121,7 +121,7 @@ graph LR
 
 ```bash
 # Clonar el repositorio
-git clone <repository-url>
+git clone https://github.com/martino-lucas95/Entregable4DevOps.git
 cd Entregable4DevOps-main
 
 # Construir y levantar servicios
@@ -154,8 +154,6 @@ kubectl get all -n development
 # Acceder a la aplicación
 kubectl port-forward svc/stock-management-frontend 5173:5173 -n development
 ```
-
-Ver [DEPLOYMENT.md](./DEPLOYMENT.md) para instrucciones detalladas.
 
 ## 📊 Análisis de Calidad
 
