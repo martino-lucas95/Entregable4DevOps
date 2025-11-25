@@ -164,6 +164,75 @@ install_falco() {
     fi
 }
 
+# Función para instalar Jenkins
+install_jenkins() {
+    log "=== Instalando Jenkins ==="
+    
+    local JENKINS_NAMESPACE="jenkins"
+    
+    # Verificar si Jenkins ya está instalado
+    if kubectl get namespace "$JENKINS_NAMESPACE" &> /dev/null && \
+       helm list -n "$JENKINS_NAMESPACE" | grep -q jenkins; then
+        log_info "Jenkins ya está instalado, verificando estado..."
+        kubectl get pods -n "$JENKINS_NAMESPACE" >> "$LOG_FILE" 2>&1 || true
+        log "✓ Jenkins ya está instalado"
+        return 0
+    fi
+    
+    # Crear namespace para Jenkins
+    kubectl create namespace "$JENKINS_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f - >> "$LOG_FILE" 2>&1
+    
+    # Agregar repositorio de Jenkins
+    log "Agregando repositorio de Helm de Jenkins..."
+    helm repo add jenkins https://charts.jenkins.io >> "$LOG_FILE" 2>&1 || {
+        log_info "Repositorio de Jenkins ya existe, actualizando..."
+    }
+    helm repo update jenkins >> "$LOG_FILE" 2>&1
+    
+    # Instalar Jenkins con configuración que cumple políticas de Kyverno
+    log "Instalando Jenkins..."
+    helm upgrade --install jenkins jenkins/jenkins \
+        --namespace "$JENKINS_NAMESPACE" \
+        --set controller.installPlugins=false \
+        --set controller.runAsUser=1000 \
+        --set controller.runAsGroup=1000 \
+        --set controller.serviceType=NodePort \
+        --set controller.serviceNodePort=30080 \
+        --set controller.resources.requests.cpu=500m \
+        --set controller.resources.requests.memory=1Gi \
+        --set controller.resources.limits.cpu=2000m \
+        --set controller.resources.limits.memory=2Gi \
+        --set controller.javaOpts="-Xmx1g -Xms512m" \
+        --set controller.labels.app=jenkins \
+        --set controller.labels.version=latest \
+        --set controller.labels.environment=development \
+        --wait \
+        --timeout 10m >> "$LOG_FILE" 2>&1 || {
+        log_error "Error al instalar Jenkins"
+        return 1
+    }
+    
+    # Esperar a que Jenkins esté listo
+    log "Esperando a que Jenkins esté listo..."
+    kubectl wait --for=condition=ready pod \
+        -l app.kubernetes.io/component=jenkins-controller \
+        -n "$JENKINS_NAMESPACE" \
+        --timeout=300s >> "$LOG_FILE" 2>&1 || {
+        log_warning "Jenkins puede tardar más en estar completamente listo"
+    }
+    
+    # Obtener contraseña inicial de Jenkins
+    log "Obteniendo contraseña inicial de Jenkins..."
+    sleep 10
+    local jenkins_password=$(kubectl exec -n "$JENKINS_NAMESPACE" \
+        $(kubectl get pod -n "$JENKINS_NAMESPACE" -l app.kubernetes.io/component=jenkins-controller -o jsonpath='{.items[0].metadata.name}') \
+        -- cat /run/secrets/additional/chart-admin-password 2>/dev/null || echo "admin")
+    
+    log "✓ Jenkins instalado exitosamente"
+    log_info "Contraseña inicial de Jenkins: $jenkins_password"
+    log_info "Guarda esta contraseña para el primer acceso"
+}
+
 # Función para desplegar la aplicación
 deploy_application() {
     log "=== Desplegando Aplicación con Helm ==="
@@ -236,6 +305,14 @@ verify_services() {
     
     # Prometheus
     log "  Prometheus: kubectl port-forward svc/$HELM_RELEASE-prometheus 9090:9090 -n $NAMESPACE"
+    
+    # Jenkins
+    if kubectl get namespace jenkins &> /dev/null; then
+        JENKINS_PORT=$(kubectl get svc -n jenkins -l app.kubernetes.io/component=jenkins-controller -o jsonpath='{.items[0].spec.ports[0].nodePort}' 2>/dev/null || echo "30080")
+        log "  Jenkins: http://localhost:$JENKINS_PORT"
+        log "    Usuario: admin"
+        log "    Contraseña: $(kubectl exec -n jenkins $(kubectl get pod -n jenkins -l app.kubernetes.io/component=jenkins-controller -o jsonpath='{.items[0].metadata.name}' 2>/dev/null) -- cat /run/secrets/additional/chart-admin-password 2>/dev/null || echo 'admin')"
+    fi
 }
 
 # Función principal
@@ -251,6 +328,7 @@ main() {
     install_kyverno
     apply_kyverno_policies
     install_falco
+    install_jenkins
     deploy_application
     verify_services
     

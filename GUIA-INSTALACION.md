@@ -100,7 +100,13 @@ El script realiza las siguientes acciones en orden:
 6. **Instalación de Falco**
    - Instala Falco para monitoreo de seguridad en tiempo de ejecución
 
-7. **Despliegue de la Aplicación**
+7. **Instalación de Jenkins**
+   - Instala Jenkins usando Helm Chart oficial
+   - Configura Jenkins para cumplir con políticas de Kyverno
+   - Expone Jenkins en NodePort 30080
+   - Obtiene y muestra la contraseña inicial
+
+8. **Despliegue de la Aplicación**
    - Crea el namespace `development`
    - Despliega la aplicación usando Helm Chart
    - Espera a que todos los pods estén listos
@@ -152,6 +158,10 @@ kubectl get pods -n falco
 
 # Verificar Kyverno
 kubectl get pods -n kyverno
+
+# Verificar Jenkins
+kubectl get pods -n jenkins
+kubectl get svc -n jenkins
 ```
 
 ## 📊 Populando Dashboards con Datos
@@ -294,6 +304,46 @@ kubectl port-forward svc/stock-management-prometheus 9090:9090 -n development
 # http://localhost:9090
 ```
 
+### Jenkins
+
+```bash
+# Obtener puerto (NodePort 30080 por defecto)
+JENKINS_PORT=$(kubectl get svc -n jenkins -l app.kubernetes.io/component=jenkins-controller -o jsonpath='{.items[0].spec.ports[0].nodePort}')
+
+# Acceder directamente (si NodePort está configurado)
+# http://localhost:$JENKINS_PORT
+
+# O usar port-forward
+kubectl port-forward svc/jenkins 8080:8080 -n jenkins
+
+# Acceder en navegador
+# http://localhost:8080
+# Usuario: admin
+# Contraseña: (obtener con el comando siguiente)
+```
+
+**Obtener contraseña inicial de Jenkins:**
+
+```bash
+# Obtener contraseña del pod de Jenkins
+kubectl exec -n jenkins \
+  $(kubectl get pod -n jenkins -l app.kubernetes.io/component=jenkins-controller -o jsonpath='{.items[0].metadata.name}') \
+  -- cat /run/secrets/additional/chart-admin-password
+```
+
+**Configuración inicial de Jenkins:**
+
+1. Acceder a Jenkins con usuario `admin` y la contraseña obtenida
+2. Instalar plugins recomendados (opcional)
+3. Crear usuario administrador (opcional)
+4. Configurar credenciales necesarias para el pipeline:
+   - `docker-registry-url`: URL del registro Docker
+   - `docker-credentials`: Credenciales de Docker
+   - `kubeconfig`: Configuración de Kubernetes
+   - `checkmarx-one-api-key`: API Key de Checkmarx One
+   - `checkmarx-one-base-uri`: URL base de Checkmarx One
+5. Crear un nuevo pipeline desde el Jenkinsfile del repositorio
+
 **Consultas útiles en Prometheus:**
 ```
 # Requests por segundo
@@ -341,7 +391,11 @@ Para eliminar todos los recursos y limpiar el entorno:
    - Desinstala Falco usando Helm
    - Elimina el namespace `falco`
 
-6. **Desinstalación de Kyverno**
+6. **Desinstalación de Jenkins**
+   - Desinstala Jenkins usando Helm
+   - Elimina el namespace `jenkins`
+
+7. **Desinstalación de Kyverno**
    - Desinstala Kyverno usando Helm
    - Elimina el namespace `kyverno`
 
@@ -359,6 +413,7 @@ Recursos eliminados:
   ✓ Aplicación y namespace development
   ✓ Políticas de Kyverno
   ✓ Falco
+  ✓ Jenkins
   ✓ Kyverno
   ✓ Port-forwards
 
@@ -380,6 +435,10 @@ kubectl get namespace kyverno
 # Verificar que Falco fue eliminado
 kubectl get namespace falco
 # Error esperado: Error from server (NotFound): namespaces "falco" not found
+
+# Verificar que Jenkins fue eliminado
+kubectl get namespace jenkins
+# Error esperado: Error from server (NotFound): namespaces "jenkins" not found
 
 # Verificar políticas de Kyverno
 kubectl get clusterpolicies

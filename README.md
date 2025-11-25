@@ -896,6 +896,7 @@ Script principal que inicializa todo el entorno del proyecto.
 - ✅ Construye imágenes Docker (backend y frontend)
 - ✅ Instala Kyverno y aplica políticas de seguridad
 - ✅ Instala Falco para monitoreo de seguridad
+- ✅ Instala Jenkins para CI/CD
 - ✅ Despliega la aplicación completa con Helm
 - ✅ Verifica que todos los componentes estén listos
 

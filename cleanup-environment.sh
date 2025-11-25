@@ -42,6 +42,7 @@ confirm_cleanup() {
     log_warning "  - Namespace: $NAMESPACE"
     log_warning "  - Políticas de Kyverno"
     log_warning "  - Falco"
+    log_warning "  - Jenkins"
     log_warning "  - Port-forwards activos"
     log ""
     read -p "¿Estás seguro de que deseas continuar? (escribe 'yes' para confirmar): " confirmation
@@ -168,6 +169,27 @@ uninstall_kyverno() {
     fi
 }
 
+# Función para desinstalar Jenkins
+uninstall_jenkins() {
+    log "=== Desinstalando Jenkins ==="
+    
+    if helm list -n jenkins | grep -q jenkins; then
+        log "Desinstalando Jenkins..."
+        helm uninstall jenkins -n jenkins >> "$LOG_FILE" 2>&1 || {
+            log_warning "Error al desinstalar Jenkins"
+        }
+        
+        # Eliminar namespace de Jenkins
+        if kubectl get namespace jenkins &> /dev/null; then
+            kubectl delete namespace jenkins --timeout=2m >> "$LOG_FILE" 2>&1 || true
+        fi
+        
+        log "✓ Jenkins desinstalado"
+    else
+        log_info "Jenkins no está instalado, saltando..."
+    fi
+}
+
 # Función para limpiar imágenes Docker locales (opcional)
 cleanup_docker_images() {
     log "=== Limpiando Imágenes Docker Locales (Opcional) ==="
@@ -199,6 +221,7 @@ main() {
     remove_kyverno_policies
     uninstall_falco
     uninstall_kyverno
+    uninstall_jenkins
     cleanup_docker_images
     
     log ""
@@ -211,6 +234,7 @@ main() {
     log "  ✓ Políticas de Kyverno"
     log "  ✓ Falco"
     log "  ✓ Kyverno"
+    log "  ✓ Jenkins"
     log "  ✓ Port-forwards"
     log ""
     log "Para volver a inicializar el entorno, ejecuta:"
