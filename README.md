@@ -20,6 +20,7 @@ Sistema de gestión de stock con stack completo de DevOps: contenedorización, o
 - [Seguridad](#seguridad)
 - [Problemas Encontrados y Soluciones Adoptadas](#problemas-encontrados-y-soluciones-adoptadas)
 - [Conclusiones Generales y Oportunidades de Mejora](#conclusiones-generales-y-oportunidades-de-mejora)
+- [Scripts de Automatización](#scripts-de-automatización)
 - [Documentación](#documentación)
 
 ## 🎯 Descripción
@@ -879,6 +880,112 @@ Todos los reportes de seguridad están disponibles en el directorio [`reports/`]
 - [Falco Event Log](./reports/falco-event.log) - Eventos de seguridad detectados por Falco
   - **Evento documentado**: Intento de acceso y modificación de archivos del sistema
   - **Severidad**: Media-Alta
+
+## 🤖 Scripts de Automatización
+
+El proyecto incluye scripts de bash para automatizar la inicialización, populación de datos y limpieza del entorno completo.
+
+### Scripts Disponibles
+
+#### 1. `setup-environment.sh` - Inicialización Completa
+
+Script principal que inicializa todo el entorno del proyecto.
+
+**Funcionalidades:**
+- ✅ Verifica prerequisitos (kubectl, helm, docker)
+- ✅ Construye imágenes Docker (backend y frontend)
+- ✅ Instala Kyverno y aplica políticas de seguridad
+- ✅ Instala Falco para monitoreo de seguridad
+- ✅ Despliega la aplicación completa con Helm
+- ✅ Verifica que todos los componentes estén listos
+
+**Uso:**
+```bash
+./setup-environment.sh
+```
+
+**Resultado:**
+- Namespace `development` creado
+- Aplicación desplegada y funcionando
+- Kyverno instalado con políticas aplicadas
+- Falco instalado y monitoreando
+- Todos los servicios accesibles
+
+#### 2. `populate-dashboards.sh` - Populación de Dashboards
+
+Script que genera datos y tráfico para popular los dashboards de Grafana.
+
+**Funcionalidades:**
+- ✅ Configura port-forward automático del backend
+- ✅ Crea productos de ejemplo (5 productos)
+- ✅ Crea movimientos de stock (entradas y salidas)
+- ✅ Genera tráfico HTTP para métricas
+- ✅ Popula métricas de negocio y sistema
+
+**Uso:**
+```bash
+./populate-dashboards.sh
+```
+
+**Resultado:**
+- Productos creados en la base de datos
+- Movimientos de stock registrados
+- Métricas HTTP generadas (requests, latencia)
+- Dashboards de Grafana con datos reales
+
+#### 3. `cleanup-environment.sh` - Limpieza Completa
+
+Script que elimina todos los recursos del entorno.
+
+**Funcionalidades:**
+- ✅ Desinstala la aplicación (Helm release)
+- ✅ Elimina namespace `development`
+- ✅ Elimina políticas de Kyverno
+- ✅ Desinstala Falco
+- ✅ Desinstala Kyverno
+- ✅ Detiene port-forwards activos
+- ✅ Opcionalmente elimina imágenes Docker locales
+
+**Uso:**
+```bash
+./cleanup-environment.sh
+```
+
+**Confirmación requerida:** El script solicita confirmación (`yes`) antes de eliminar recursos.
+
+**Resultado:**
+- Todos los recursos eliminados
+- Entorno limpio y listo para nueva inicialización
+
+### Flujo de Trabajo Completo
+
+```bash
+# 1. Inicializar todo el entorno
+./setup-environment.sh
+
+# 2. Popular dashboards con datos
+./populate-dashboards.sh
+
+# 3. Acceder a Grafana para ver métricas
+kubectl port-forward svc/stock-management-grafana 3000:80 -n development
+# Abrir http://localhost:3000 (admin/admin)
+
+# 4. Cuando termines, limpiar todo
+./cleanup-environment.sh
+```
+
+### Documentación Detallada
+
+Para instrucciones paso a paso detalladas, comandos específicos y troubleshooting, consulta:
+
+**[GUIA-INSTALACION.md](./GUIA-INSTALACION.md)** - Guía completa de instalación y configuración
+
+Esta guía incluye:
+- Instrucciones paso a paso con resultados esperados
+- Comandos de verificación
+- Troubleshooting común
+- Acceso a todos los componentes
+- Ejemplos de uso
 
 ## 📚 Documentación
 
