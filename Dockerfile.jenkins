@@ -1,0 +1,28 @@
+FROM jenkins/jenkins:lts
+
+USER root
+
+# Install required tools
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    git \
+    curl \
+    wget \
+    docker.io \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python security tools
+RUN pip3 install --break-system-packages semgrep
+
+# Install Node.js (for backend and frontend builds)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install additional tools
+RUN npm install -g snyk @angular/cli
+
+USER jenkins
+

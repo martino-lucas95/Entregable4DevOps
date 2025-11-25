@@ -57,7 +57,15 @@ pipeline {
                     // Install Semgrep if not available
                     sh '''
                         if ! command -v semgrep &> /dev/null; then
-                            pip3 install semgrep
+                            echo "Installing Semgrep..."
+                            # Try pipx first (recommended for CLI tools)
+                            if command -v pipx &> /dev/null; then
+                                pipx install semgrep
+                            else
+                                # Fallback: install pipx first, then semgrep
+                                apt-get update && apt-get install -y pipx
+                                pipx install semgrep
+                            fi
                         fi
                     '''
                     
