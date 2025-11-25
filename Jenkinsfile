@@ -9,8 +9,9 @@ pipeline {
         // Kubernetes configuration
         KUBECONFIG = credentials('kubeconfig')
         
-        // Snyk configuration
-        SNYK_TOKEN = credentials('snyk-token')
+        // Checkmarx One configuration
+        CHECKMARX_ONE_API_KEY = credentials('checkmarx-one-api-key')
+        CHECKMARX_ONE_BASE_URI = credentials('checkmarx-one-base-uri')
         
         // Application versions
         BACKEND_IMAGE = "entregable4devops-backend"
@@ -100,65 +101,81 @@ pipeline {
             }
             steps {
                 script {
-                    echo "=== Stage: Escaneo de Vulnerabilidades con Snyk ==="
+                    echo "=== Stage: Escaneo de Vulnerabilidades con Checkmarx One SCA ==="
                     
-                    def criticalVulns = 0
-                    def highVulns = 0
-                    
-                    // Scan Backend dependencies
-                    dir('backend') {
-                        sh '''
-                            echo "Scanning backend dependencies..."
-                            npx snyk auth ${SNYK_TOKEN}
-                            npx snyk test \
-                                --json \
-                                --severity-threshold=high \
-                                > ../snyk-backend-report.json || true
-                        '''
-                    }
-                    
-                    // Scan Frontend dependencies
-                    dir('frontend') {
-                        sh '''
-                            echo "Scanning frontend dependencies..."
-                            npx snyk test \
-                                --json \
-                                --severity-threshold=high \
-                                > ../snyk-frontend-report.json || true
-                        '''
-                    }
-                    
-                    // Archive reports
-                    archiveArtifacts artifacts: 'snyk-*-report.json', allowEmptyArchive: true
-                    
-                    // Parse results and check for critical vulnerabilities
-                    script {
-                        try {
-                            def backendReport = readJSON file: 'snyk-backend-report.json'
-                            def frontendReport = readJSON file: 'snyk-frontend-report.json'
+                    // Install Checkmarx One CLI if not available
+                    // Assuming Linux x64 environment (standard for CI/CD containers)
+                    sh '''
+                        if ! command -v cx &> /dev/null; then
+                            echo "Installing Checkmarx One CLI (Linux x64)..."
                             
-                            criticalVulns = (backendReport.vulnerabilities?.findAll { it.severity == 'critical' }?.size() ?: 0) +
-                                          (frontendReport.vulnerabilities?.findAll { it.severity == 'critical' }?.size() ?: 0)
-                            
-                            highVulns = (backendReport.vulnerabilities?.findAll { it.severity == 'high' }?.size() ?: 0) +
-                                       (frontendReport.vulnerabilities?.findAll { it.severity == 'high' }?.size() ?: 0)
-                            
-                            echo "Vulnerability Summary:"
-                            echo "  Critical: ${criticalVulns}"
-                            echo "  High: ${highVulns}"
-                            
-                            // Fail pipeline if critical vulnerabilities found
-                            if (criticalVulns > 0) {
-                                error("CRITICAL VULNERABILITIES FOUND: ${criticalVulns} critical vulnerabilities detected. Pipeline aborted for security reasons.")
+                            # Download latest release for Linux x64
+                            curl -L -o cx.tar.gz "https://github.com/checkmarx-io/ast-cli/releases/latest/download/ast-cli_linux_x64.tar.gz" || {
+                                echo "ERROR: Failed to download Checkmarx One CLI"
+                                exit 1
                             }
                             
-                            if (highVulns > 5) {
-                                echo "WARNING: ${highVulns} high severity vulnerabilities found. Consider fixing before production deployment."
-                            }
-                        } catch (Exception e) {
-                            echo "Could not parse Snyk reports: ${e.message}"
-                        }
-                    }
+                            # Extract and install
+                            tar -xzf cx.tar.gz
+                            chmod +x cx
+                            
+                            # Install to /usr/local/bin or add to PATH
+                            if [ -w /usr/local/bin ]; then
+                                mv cx /usr/local/bin/
+                            else
+                                mkdir -p /tmp/cx-cli
+                                mv cx /tmp/cx-cli/
+                                export PATH=$PATH:/tmp/cx-cli
+                            fi
+                            
+                            rm -f cx.tar.gz
+                            
+                            # Verify installation
+                            if command -v cx &> /dev/null; then
+                                echo "Checkmarx One CLI installed successfully"
+                                cx version || true
+                            else
+                                echo "ERROR: Checkmarx One CLI installation failed"
+                                exit 1
+                            fi
+                        else
+                            echo "Checkmarx One CLI already installed"
+                            cx version || true
+                        fi
+                    '''
+                    
+                    // Authenticate with Checkmarx One using API Key
+                    sh '''
+                        echo "Authenticating with Checkmarx One using API Key..."
+                        cx auth login \
+                            --apikey "${CHECKMARX_ONE_API_KEY}" \
+                            --base-uri "${CHECKMARX_ONE_BASE_URI}"
+                    '''
+                    
+                    // Single SCA scan for both backend and frontend
+                    sh '''
+                        echo "Running combined SCA scan for backend and frontend..."
+                        echo "This scan will analyze dependencies from both backend/ and frontend/ directories"
+                        
+                        # Run single SCA scan from project root
+                        # The --threshold parameter will cause the command to exit with non-zero code
+                        # if critical or high vulnerabilities are found, which will fail the pipeline
+                        # The CLI will automatically display scan results in the console output
+                        cx scan create \
+                            -s . \
+                            --project-name "stock-management" \
+                            --sca \
+                            --output-path checkmarx-sca-report.json \
+                            --output-format json \
+                            --branch "${GIT_BRANCH}" \
+                            --threshold "sca-critical=1; sca-high=1"
+                        
+                        # If we reach here, the scan completed successfully (no critical/high vulnerabilities)
+                        echo "SCA scan completed successfully - no critical or high vulnerabilities found"
+                    '''
+                    
+                    // Archive report for reference
+                    archiveArtifacts artifacts: 'checkmarx-sca-report.json', allowEmptyArchive: true
                 }
             }
         }
