@@ -694,6 +694,37 @@ kubectl get clusterpolicies
 kubectl describe clusterpolicy disallow-latest-tag
 ```
 
+#### Validación de Políticas
+
+Para validar que las políticas funcionan correctamente y que los pods que incumplan sean rechazados:
+
+**Linux/macOS:**
+```bash
+./validate-kyverno-policies.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+.\validate-kyverno-policies.ps1
+```
+
+El script de validación:
+- Aplica todas las políticas de Kyverno
+- Crea pods de prueba que violan cada política para verificar que sean rechazados
+- Crea un pod válido que cumple todas las políticas para verificar que sea aceptado
+- Registra toda la evidencia en `reports/kyverno-validation.log`
+
+**Tests ejecutados:**
+1. Pod con imagen `latest` → debe ser rechazado
+2. Pod sin límites de recursos → debe ser rechazado
+3. Pod ejecutándose como root → debe ser rechazado
+4. Pod sin labels obligatorios → debe ser rechazado
+5. Pod válido que cumple todas las políticas → debe ser aceptado
+6. Pod con imagen Backend de la aplicación (`entregable4devops-backend:1.0`) → debe cumplir todas las políticas
+7. Pod con imagen Frontend de la aplicación (`entregable4devops-frontend:1.0`) → debe cumplir todas las políticas
+
+**Nota:** Los tests 6 y 7 validan que las imágenes reales de la aplicación cumplan con todas las políticas de Kyverno. Si las imágenes no están construidas localmente, estos tests se omitirán con una advertencia.
+
 **Recursos:**
 - [Documentación de Kyverno](./kyverno/README.md)
 - [Documentación oficial de Kyverno](https://kyverno.io/docs/)

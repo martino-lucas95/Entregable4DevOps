@@ -1,0 +1,169 @@
+[2025-11-24 21:21:07] ==========================================
+[2025-11-24 21:21:07] Validación de Políticas de Kyverno
+[2025-11-24 21:21:07] ==========================================
+[2025-11-24 21:21:07] 
+[2025-11-24 21:21:07] [1/6] Verificando instalación de Kyverno...
+error: no matching resources found
+[2025-11-24 21:21:07] ADVERTENCIA: Los pods de Kyverno no están listos
+[2025-11-24 21:21:07] ✓ Kyverno está instalado y funcionando
+[2025-11-24 21:21:07] 
+[2025-11-24 21:21:07] [2/6] Aplicando políticas de Kyverno...
+[2025-11-24 21:21:07]   Aplicando: disallow-latest-tag.yaml
+Warning: Validation failure actions enforce/audit are deprecated, use Enforce/Audit instead.
+clusterpolicy.kyverno.io/disallow-latest-tag configured
+[2025-11-24 21:21:07]     ✓ Política aplicada: disallow-latest-tag.yaml
+[2025-11-24 21:21:07]   Aplicando: disallow-root-containers.yaml
+Warning: Validation failure actions enforce/audit are deprecated, use Enforce/Audit instead.
+clusterpolicy.kyverno.io/disallow-root-containers configured
+[2025-11-24 21:21:07]     ✓ Política aplicada: disallow-root-containers.yaml
+[2025-11-24 21:21:07]   Aplicando: require-labels.yaml
+Warning: Validation failure actions enforce/audit are deprecated, use Enforce/Audit instead.
+clusterpolicy.kyverno.io/require-labels configured
+[2025-11-24 21:21:08]     ✓ Política aplicada: require-labels.yaml
+[2025-11-24 21:21:08]   Aplicando: require-resource-limits.yaml
+Warning: Validation failure actions enforce/audit are deprecated, use Enforce/Audit instead.
+clusterpolicy.kyverno.io/require-resource-limits configured
+[2025-11-24 21:21:08]     ✓ Política aplicada: require-resource-limits.yaml
+[2025-11-24 21:21:08] ✓ Total de políticas aplicadas: 4
+[2025-11-24 21:21:08] 
+[2025-11-24 21:21:08] [3/6] Verificando políticas aplicadas...
+[2025-11-24 21:21:08]   - clusterpolicy.kyverno.io/disallow-latest-tag
+[2025-11-24 21:21:08]   - clusterpolicy.kyverno.io/disallow-root-containers
+[2025-11-24 21:21:08]   - clusterpolicy.kyverno.io/require-labels
+[2025-11-24 21:21:08]   - clusterpolicy.kyverno.io/require-resource-limits
+[2025-11-24 21:21:08] 
+[2025-11-24 21:21:08] [4/7] Creando namespace de prueba: kyverno-test
+namespace/kyverno-test created
+[2025-11-24 21:21:08] ✓ Namespace creado
+[2025-11-24 21:21:08] 
+[2025-11-24 21:21:08] [5/7] Ejecutando pruebas de validación...
+[2025-11-24 21:21:08] 
+[2025-11-24 21:21:08] --- TEST 1: Política disallow-latest-tag ---
+[2025-11-24 21:21:08] Intentando crear pod con imagen 'latest'...
+Error from server: error when creating "STDIN": admission webhook "validate.kyverno.svc-fail" denied the request: 
+
+resource Pod/kyverno-test/test-latest-tag was blocked due to the following policies 
+
+disallow-latest-tag:
+  validate-image-tag: 'validation failure: validation error: No se permite el uso
+    de la etiqueta de imagen mutable ''latest''. rule validate-image-tag failed at
+    path /image/'
+[2025-11-24 21:21:08] ✓ TEST 1 PASADO: Pod con tag 'latest' fue correctamente rechazado
+[2025-11-24 21:21:08] 
+[2025-11-24 21:21:08] --- TEST 2: Política require-resource-limits ---
+[2025-11-24 21:21:08] Intentando crear pod sin límites de recursos...
+Error from server: error when creating "STDIN": admission webhook "validate.kyverno.svc-fail" denied the request: 
+
+resource Pod/kyverno-test/test-no-resources was blocked due to the following policies 
+
+require-resource-limits:
+  require-limits: 'validation failure: validation error: Se requieren límites de recursos
+    para CPU y memoria. rule require-limits failed at path /resources/limits/'
+[2025-11-24 21:21:08] ✗ TEST 2 FALLÓ: Pod sin límites de recursos fue aceptado (no debería)
+[2025-11-24 21:21:08] 
+[2025-11-24 21:21:08] --- TEST 3: Política disallow-root-containers ---
+[2025-11-24 21:21:08] Intentando crear pod ejecutándose como root...
+Error from server: error when creating "STDIN": admission webhook "validate.kyverno.svc-fail" denied the request: 
+
+resource Pod/kyverno-test/test-root-container was blocked due to the following policies 
+
+disallow-root-containers:
+  validate-run-as-non-root: 'validation failure: validation error: No se permite ejecutar
+    contenedores como root. Define runAsNonRoot: true en securityContext. rule validate-run-as-non-root
+    failed at path /securityContext/'
+[2025-11-24 21:21:08] ✗ TEST 3 FALLÓ: Pod ejecutándose como root fue aceptado (no debería)
+[2025-11-24 21:21:08] 
+[2025-11-24 21:21:08] --- TEST 4: Política require-labels ---
+[2025-11-24 21:21:08] Intentando crear pod sin labels obligatorios...
+Error from server: error when creating "STDIN": admission webhook "validate.kyverno.svc-fail" denied the request: 
+
+resource Pod/kyverno-test/test-no-labels was blocked due to the following policies 
+
+require-labels:
+  check-required-labels: 'validation error: Todos los pods deben tener los labels
+    obligatorios: app, version, y environment. rule check-required-labels failed at
+    path /metadata/labels/'
+[2025-11-24 21:21:08] ✗ TEST 4 FALLÓ: Pod sin labels obligatorios fue aceptado (no debería)
+[2025-11-24 21:21:08] 
+[2025-11-24 21:21:08] --- TEST 5: Pod válido (debe ser aceptado) ---
+[2025-11-24 21:21:08] Intentando crear pod que cumple todas las políticas...
+pod/test-valid-pod created
+[2025-11-24 21:21:08] ✓ TEST 5 PASADO: Pod válido fue correctamente aceptado
+pod "test-valid-pod" deleted from kyverno-test namespace
+[2025-11-24 21:21:10] 
+[2025-11-24 21:21:10] 
+[2025-11-24 21:21:10] ==========================================
+[2025-11-24 21:21:10] TEST IMÁGENES DESARROLLADAS
+[2025-11-24 21:21:10] ==========================================
+[2025-11-24 21:21:10] Verificando que las imágenes desarrolladas cumplan con todas las políticas de Kyverno
+[2025-11-24 21:21:10] 
+[2025-11-24 21:21:10] --- TEST BACKEND: Validar imagen entregable4devops-backend:1.0 ---
+[2025-11-24 21:21:10] Verificando que el pod con imagen backend cumple todas las políticas...
+[2025-11-24 21:21:10]   ✓ Imagen encontrada localmente: entregable4devops-backend:1.0
+[2025-11-24 21:21:10]   Cargando imagen en minikube...
+pod/test-backend-app created
+[2025-11-24 21:21:57]   ✓ Pod creado exitosamente
+[2025-11-24 21:21:57]   ✓ Verificación de políticas:
+[2025-11-24 21:21:57]     - Tag específico (1.0, no latest): ✓ CUMPLE
+[2025-11-24 21:21:57]     - Límites de recursos (CPU y memoria): ✓ CUMPLE
+[2025-11-24 21:21:57]     - SecurityContext runAsNonRoot: ✓ CUMPLE
+[2025-11-24 21:21:57]     - Labels obligatorios (app, version, environment): ✓ CUMPLE
+[2025-11-24 21:21:57] ✓ TEST BACKEND PASADO: Imagen backend cumple con todas las políticas de Kyverno
+pod "test-backend-app" deleted from kyverno-test namespace
+[2025-11-24 21:22:02] 
+[2025-11-24 21:22:02] --- TEST FRONTEND: Validar imagen entregable4devops-frontend:1.0 ---
+[2025-11-24 21:22:02] Verificando que el pod con imagen frontend cumple todas las políticas...
+[2025-11-24 21:22:02]   ✓ Imagen encontrada localmente: entregable4devops-frontend:1.0
+[2025-11-24 21:22:02]   Cargando imagen en minikube...
+pod/test-frontend-app created
+[2025-11-24 21:22:10]   ✓ Pod creado exitosamente
+[2025-11-24 21:22:10]   ✓ Verificación de políticas:
+[2025-11-24 21:22:10]     - Tag específico (1.0, no latest): ✓ CUMPLE
+[2025-11-24 21:22:10]     - Límites de recursos (CPU y memoria): ✓ CUMPLE
+[2025-11-24 21:22:10]     - SecurityContext runAsNonRoot: ✓ CUMPLE
+[2025-11-24 21:22:10]     - Labels obligatorios (app, version, environment): ✓ CUMPLE
+[2025-11-24 21:22:10] ✓ TEST FRONTEND PASADO: Imagen frontend cumple con todas las políticas de Kyverno
+pod "test-frontend-app" deleted from kyverno-test namespace
+[2025-11-24 21:22:42] 
+[2025-11-24 21:22:42] ==========================================
+[2025-11-24 21:22:43] RESUMEN TEST IMÁGENES DESARROLLADAS
+[2025-11-24 21:22:43] ==========================================
+[2025-11-24 21:22:43] [6/7] Revisando eventos de Kyverno...
+[2025-11-24 21:22:43] 
+[2025-11-24 21:22:43] Eventos recientes de políticas:
+error: unknown flag: --tail
+See 'kubectl get --help' for usage.
+[2025-11-24 21:22:43] 
+[2025-11-24 21:22:43] Eventos de validación en namespace de prueba:
+LAST SEEN   TYPE     REASON      OBJECT                  MESSAGE
+46s         Normal   Scheduled   pod/test-backend-app    Successfully assigned kyverno-test/test-backend-app to minikube
+32s         Normal   Scheduled   pod/test-frontend-app   Successfully assigned kyverno-test/test-frontend-app to minikube
+94s         Normal   Scheduled   pod/test-valid-pod      Successfully assigned kyverno-test/test-valid-pod to minikube
+46s         Normal   Pulled      pod/test-backend-app    Container image "entregable4devops-backend:1.0" already present on machine
+46s         Normal   Created     pod/test-backend-app    Created container: backend
+46s         Normal   Started     pod/test-backend-app    Started container backend
+44s         Normal   Killing     pod/test-backend-app    Stopping container backend
+33s         Normal   Pulled      pod/test-frontend-app   Container image "entregable4devops-frontend:1.0" already present on machine
+33s         Normal   Created     pod/test-frontend-app   Created container: frontend
+33s         Normal   Started     pod/test-frontend-app   Started container frontend
+31s         Normal   Killing     pod/test-frontend-app   Stopping container frontend
+[2025-11-24 21:22:43] 
+[2025-11-24 21:22:43] ==========================================
+[2025-11-24 21:22:43] RESUMEN GENERAL DE VALIDACIÓN
+[2025-11-24 21:22:43] ==========================================
+[2025-11-24 21:22:43] Políticas aplicadas: 4
+[2025-11-24 21:22:43] Tests de políticas (bloqueo): 5
+[2025-11-24 21:22:43] Tests de imágenes desarrolladas: 2
+[2025-11-24 21:22:43] Total de tests ejecutados: 7
+[2025-11-24 21:22:43] Fecha: 2025-11-24 21:22:43
+[2025-11-24 21:22:43] 
+[2025-11-24 21:22:43] Para ver el estado de las políticas:
+[2025-11-24 21:22:43]   kubectl get clusterpolicies
+[2025-11-24 21:22:43] 
+[2025-11-24 21:22:43] Para ver detalles de una política:
+[2025-11-24 21:22:43]   kubectl describe clusterpolicy <nombre-politica>
+[2025-11-24 21:22:43] 
+[2025-11-24 21:22:43] Validación completada. Log guardado en: reports/kyverno-validation.log
+[2025-11-24 21:22:43] ==========================================
+[2025-11-24 21:22:43] Limpiando recursos de prueba...
+namespace "kyverno-test" deleted

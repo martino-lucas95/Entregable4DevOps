@@ -37,6 +37,36 @@ kubectl get clusterpolicies
 kubectl get policies --all-namespaces
 ```
 
+## Validación de Políticas
+
+Para validar que las políticas funcionan correctamente y que los pods que incumplan sean rechazados, ejecuta el script de validación:
+
+**Linux/macOS:**
+```bash
+./validate-kyverno-policies.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+.\validate-kyverno-policies.ps1
+```
+
+El script realiza las siguientes acciones:
+1. Verifica que Kyverno esté instalado y funcionando
+2. Aplica todas las políticas desde `kyverno/policies/`
+3. Crea pods de prueba que violan cada política para verificar que sean rechazados
+4. Crea un pod válido que cumple todas las políticas para verificar que sea aceptado
+5. Registra toda la evidencia en `reports/kyverno-validation.log`
+
+**Tests ejecutados:**
+- **TEST 1:** Pod con imagen `latest` (debe ser rechazado)
+- **TEST 2:** Pod sin límites de recursos (debe ser rechazado)
+- **TEST 3:** Pod ejecutándose como root (debe ser rechazado)
+- **TEST 4:** Pod sin labels obligatorios (debe ser rechazado)
+- **TEST 5:** Pod válido que cumple todas las políticas (debe ser aceptado)
+- **TEST 6:** Pod con imagen Backend de la aplicación (`entregable4devops-backend:1.0`) - debe cumplir todas las políticas
+- **TEST 7:** Pod con imagen Frontend de la aplicación (`entregable4devops-frontend:1.0`) - debe cumplir todas las políticas
+
 ## Aplicar Políticas
 
 Para aplicar las políticas personalizadas, puedes usar el script automatizado o aplicar manualmente:
