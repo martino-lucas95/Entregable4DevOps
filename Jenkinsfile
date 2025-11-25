@@ -6,12 +6,12 @@ pipeline {
         DOCKER_REGISTRY = credentials('docker-registry-url')
         DOCKER_CREDENTIALS = credentials('docker-credentials')
         
-        // Kubernetes configuration
-        KUBECONFIG = credentials('kubeconfig')
+        // Kubernetes configuration (comment out if not needed)
+        // KUBECONFIG = credentials('kubeconfig')
         
-        // Checkmarx One configuration
-        CHECKMARX_ONE_API_KEY = credentials('checkmarx-one-api-key')
-        CHECKMARX_ONE_BASE_URI = credentials('checkmarx-one-base-uri')
+        // Checkmarx One configuration (comment out if not needed)
+        // CHECKMARX_ONE_API_KEY = credentials('checkmarx-one-api-key')
+        // CHECKMARX_ONE_BASE_URI = credentials('checkmarx-one-base-uri')
         
         // Application versions
         BACKEND_IMAGE = "entregable4devops-backend"
