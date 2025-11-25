@@ -508,6 +508,7 @@ pipeline {
                     } catch (Exception e) {
                         echo "Warning: Could not prune Docker images: ${e.message}"
                     }
+                    // Clean workspace
                     
                     // Archive important artifacts
                     try {
