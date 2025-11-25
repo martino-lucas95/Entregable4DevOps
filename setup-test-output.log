@@ -1,0 +1,156 @@
+[0;32m[2025-11-24 22:35:37][0m ==========================================
+[0;32m[2025-11-24 22:35:37][0m Inicialización del Entorno Completo
+[0;32m[2025-11-24 22:35:37][0m ==========================================
+[0;32m[2025-11-24 22:35:37][0m 
+[0;32m[2025-11-24 22:35:37][0m Verificando prerequisitos...
+[0;32m[2025-11-24 22:35:37][0m ✓ Todos los prerequisitos están disponibles
+[0;32m[2025-11-24 22:35:37][0m === Instalando Operadores de Kubernetes ===
+[0;32m[2025-11-24 22:35:37][0m No se requieren operadores adicionales (usando deployments directos)
+[0;32m[2025-11-24 22:35:37][0m ✓ Operadores verificados
+[0;32m[2025-11-24 22:35:37][0m === Construyendo Imágenes Docker ===
+[0;32m[2025-11-24 22:35:37][0m Construyendo imagen del backend...
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.78kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:20-alpine
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 453B done
+#3 DONE 0.0s
+
+#4 [builder 1/8] FROM docker.io/library/node:20-alpine
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 2.58kB done
+#5 DONE 0.0s
+
+#6 [builder 6/8] RUN NODE_TLS_REJECT_UNAUTHORIZED=0 npx prisma generate --schema=./prisma/schema.prisma
+#6 CACHED
+
+#7 [builder 4/8] COPY package*.json ./
+#7 CACHED
+
+#8 [builder 3/8] COPY prisma ./prisma
+#8 CACHED
+
+#9 [stage-1  7/12] COPY prisma ./prisma
+#9 CACHED
+
+#10 [builder 5/8] RUN npm install && npm cache clean --force
+#10 CACHED
+
+#11 [builder 2/8] WORKDIR /app
+#11 CACHED
+
+#12 [stage-1  5/12] COPY package*.json ./
+#12 CACHED
+
+#13 [builder 8/8] RUN npm run build
+#13 CACHED
+
+#14 [stage-1 10/12] COPY entrypoint.sh ./entrypoint.sh
+#14 CACHED
+
+#15 [stage-1 11/12] RUN chmod +x ./entrypoint.sh
+#15 CACHED
+
+#16 [stage-1  3/12] RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+#16 CACHED
+
+#17 [builder 7/8] COPY . .
+#17 CACHED
+
+#18 [stage-1  9/12] COPY --from=builder /app/dist ./dist
+#18 CACHED
+
+#19 [stage-1  8/12] RUN NODE_TLS_REJECT_UNAUTHORIZED=0 npx prisma generate --schema=./prisma/schema.prisma
+#19 CACHED
+
+#20 [stage-1  4/12] RUN npm install -g prisma@^6.19.0 && npm cache clean --force
+#20 CACHED
+
+#21 [stage-1  6/12] RUN npm install --omit=dev && npm cache clean --force
+#21 CACHED
+
+#22 [stage-1 12/12] RUN chown -R appuser:appgroup /app
+#22 CACHED
+
+#23 exporting to image
+#23 exporting layers done
+#23 writing image sha256:46863da50364fa254bf5f9a5083dfb05d35f660cd21e59e91c1e2278148aeb5c done
+#23 naming to docker.io/library/entregable4devops-backend:1.0 done
+#23 DONE 0.0s
+[0;32m[2025-11-24 22:35:37][0m Construyendo imagen del frontend...
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 972B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:20-alpine
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 481B done
+#3 DONE 0.0s
+
+#4 [builder 1/6] FROM docker.io/library/node:20-alpine
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 856B done
+#5 DONE 0.0s
+
+#6 [builder 2/6] WORKDIR /app
+#6 CACHED
+
+#7 [builder 3/6] COPY package*.json ./
+#7 CACHED
+
+#8 [builder 4/6] RUN npm install
+#8 CACHED
+
+#9 [builder 5/6] COPY . .
+#9 CACHED
+
+#10 [builder 6/6] RUN npm run build
+#10 CACHED
+
+#11 [stage-1 3/6] RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+#11 CACHED
+
+#12 [stage-1 5/6] COPY --from=builder /app/dist ./dist
+#12 CACHED
+
+#13 [stage-1 4/6] RUN npm install -g serve@14.2.1
+#13 CACHED
+
+#14 [stage-1 6/6] RUN chown -R appuser:appgroup /app
+#14 CACHED
+
+#15 exporting to image
+#15 exporting layers done
+#15 writing image sha256:e286e735db5a55f0324fca073626e371fa45e1f95d105f826dbdbd101b0e5de9 done
+#15 naming to docker.io/library/entregable4devops-frontend:1.0 done
+#15 DONE 0.0s
+[0;32m[2025-11-24 22:35:37][0m ✓ Imágenes construidas exitosamente
+[0;34m[2025-11-24 22:35:37] INFO:[0m Imágenes disponibles:
+entregable4devops-frontend           1.0         e286e735db5a   About an hour ago   147MB
+entregable4devops-backend            1.0         46863da50364   About an hour ago   951MB
+[0;32m[2025-11-24 22:35:37][0m === Instalando Kyverno ===
+[1;33m[2025-11-24 22:35:37] WARNING:[0m Kyverno puede estar ya instalado o hubo un error
+[0;32m[2025-11-24 22:35:37][0m ✓ Kyverno instalado/verificado
+[0;32m[2025-11-24 22:35:37][0m === Aplicando Políticas de Kyverno ===
+[0;32m[2025-11-24 22:35:37][0m ✓ Políticas de Kyverno aplicadas
+[0;32m[2025-11-24 22:35:37][0m === Instalando Falco ===
+[1;33m[2025-11-24 22:35:37] WARNING:[0m Falco puede estar ya instalado o hubo un error
+[0;32m[2025-11-24 22:35:37][0m ✓ Falco instalado/verificado
+[0;32m[2025-11-24 22:35:37][0m === Desplegando Aplicación con Helm ===
+[0;32m[2025-11-24 22:35:37][0m Actualizando dependencias de Helm...
+[0;32m[2025-11-24 22:35:37][0m Desplegando aplicación en namespace: development
+[0;31m[2025-11-24 22:35:37] ERROR:[0m Error al desplegar la aplicación

@@ -92,6 +92,12 @@ install_operators() {
 build_images() {
     log "=== Construyendo Imágenes Docker ==="
     
+    # Si minikube está disponible, usar su docker daemon
+    if command -v minikube &> /dev/null && minikube status &> /dev/null; then
+        log "Usando Docker daemon de minikube..."
+        eval $(minikube docker-env)
+    fi
+    
     log "Construyendo imagen del backend..."
     docker build -t entregable4devops-backend:1.0 ./backend || {
         log_error "Error al construir imagen del backend"
@@ -109,6 +115,11 @@ build_images() {
     # Mostrar imágenes construidas
     log_info "Imágenes disponibles:"
     docker images | grep entregable4devops | tee -a "$LOG_FILE"
+    
+    # Si usamos minikube, restaurar docker daemon local
+    if command -v minikube &> /dev/null && minikube status &> /dev/null; then
+        eval $(minikube docker-env -u) 2>/dev/null || true
+    fi
 }
 
 # Función para instalar Kyverno
@@ -170,7 +181,9 @@ deploy_application() {
         --namespace "$NAMESPACE" \
         --values ./helm-chart/values-dev.yaml \
         --set backend.image.tag=1.0 \
+        --set backend.image.pullPolicy=IfNotPresent \
         --set frontend.image.tag=1.0 \
+        --set frontend.image.pullPolicy=IfNotPresent \
         --wait \
         --timeout 10m >> "$LOG_FILE" 2>&1 || {
         log_error "Error al desplegar la aplicación"
