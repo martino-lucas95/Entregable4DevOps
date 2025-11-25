@@ -62,10 +62,19 @@ pipeline {
                             if command -v pipx &> /dev/null; then
                                 pipx install semgrep
                             else
-                                # Fallback: install pipx first, then semgrep
-                                apt-get update && apt-get install -y pipx
-                                pipx install semgrep
+                                # Fallback: use pip3 with --break-system-packages flag or via venv
+                                if python3 -m venv --help > /dev/null 2>&1; then
+                                    echo "Creating virtual environment for semgrep..."
+                                    python3 -m venv /tmp/semgrep-venv
+                                    /tmp/semgrep-venv/bin/pip install semgrep
+                                    ln -sf /tmp/semgrep-venv/bin/semgrep /usr/local/bin/semgrep
+                                else
+                                    # Last resort: use pip3 with --break-system-packages
+                                    pip3 install --break-system-packages semgrep
+                                fi
                             fi
+                        else
+                            echo "Semgrep already installed at $(command -v semgrep)"
                         fi
                     '''
                     
