@@ -111,7 +111,7 @@ pipeline {
                     script {
                         def semgrepOutput = readFile(file: 'semgrep-report.json')
                         // Count findings with severity ERROR
-                        def criticalMatches = (semgrepOutput =~ /"severity":\s*"ERROR"/g).size()
+                        def criticalMatches = (semgrepOutput.findAll(/"severity":\s*"ERROR"/) ?: []).size()
                         
                         if (criticalMatches > 0) {
                             echo "⚠️  WARNING: Found ${criticalMatches} critical security issue(s) in static analysis"
@@ -355,8 +355,8 @@ pipeline {
                             def frontendOutput = readFile(file: 'trivy-frontend-image.json')
                             
                             // Count CRITICAL vulnerabilities using regex
-                            def backendCritical = (backendOutput =~ /"Severity":\s*"CRITICAL"/g).size()
-                            def frontendCritical = (frontendOutput =~ /"Severity":\s*"CRITICAL"/g).size()
+                            def backendCritical = (backendOutput.findAll(/"Severity":\s*"CRITICAL"/) ?: []).size()
+                            def frontendCritical = (frontendOutput.findAll(/"Severity":\s*"CRITICAL"/) ?: []).size()
                             
                             def totalCritical = backendCritical + frontendCritical
                             
