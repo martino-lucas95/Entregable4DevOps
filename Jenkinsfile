@@ -501,12 +501,20 @@ pipeline {
                 echo "Cleaning up workspace..."
                 
                 // Remove old Docker images
-                sh """
-                    docker image prune -f
-                """
+                try {
+                    sh '''
+                        docker image prune -f || true
+                    '''
+                } catch (Exception e) {
+                    echo "Warning: Could not prune Docker images: ${e.message}"
+                }
                 
                 // Archive important artifacts
-                archiveArtifacts artifacts: '**/reports/*.json', allowEmptyArchive: true
+                try {
+                    archiveArtifacts artifacts: '**/reports/*.json', allowEmptyArchive: true
+                } catch (Exception e) {
+                    echo "Warning: Could not archive artifacts: ${e.message}"
+                }
             }
         }
     }
