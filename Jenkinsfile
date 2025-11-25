@@ -110,7 +110,7 @@ pipeline {
                     // Check for critical issues using shell command
                     sh '''
                         echo "Checking for critical issues in semgrep report..."
-                        CRITICAL_COUNT=$(grep -o '"severity":\s*"ERROR"' semgrep-report.json | wc -l)
+                        CRITICAL_COUNT=$(grep -o '"severity": "ERROR"' semgrep-report.json | wc -l)
                         
                         if [ "$CRITICAL_COUNT" -gt 0 ]; then
                             echo "⚠️  WARNING: Found ${CRITICAL_COUNT} critical security issue(s) in static analysis"
@@ -350,8 +350,8 @@ pipeline {
                     sh '''
                         echo "Checking for critical vulnerabilities in Trivy reports..."
                         
-                        BACKEND_CRITICAL=$(grep -o '"Severity":\s*"CRITICAL"' trivy-backend-image.json 2>/dev/null | wc -l)
-                        FRONTEND_CRITICAL=$(grep -o '"Severity":\s*"CRITICAL"' trivy-frontend-image.json 2>/dev/null | wc -l)
+                        BACKEND_CRITICAL=$(grep -o '"Severity": "CRITICAL"' trivy-backend-image.json 2>/dev/null | wc -l)
+                        FRONTEND_CRITICAL=$(grep -o '"Severity": "CRITICAL"' trivy-frontend-image.json 2>/dev/null | wc -l)
                         TOTAL_CRITICAL=$((BACKEND_CRITICAL + FRONTEND_CRITICAL))
                         
                         if [ "$TOTAL_CRITICAL" -gt 0 ]; then
