@@ -21,6 +21,10 @@ spec:
           - resources:
               kinds:
                 - Pod
+              namespaces:
+                - "!falco"
+                - "!kube-system"
+                - "!kube-public"
       validate:
         message: "Se requieren límites de recursos para CPU y memoria."
         foreach:

@@ -1,0 +1,32 @@
+# Valores personalizados para Falco que cumplen con las políticas de Kyverno
+
+driver:
+  enabled: true
+  loader:
+    enabled: false
+
+falcosidekick:
+  enabled: false
+  webui:
+    enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Configuración para cumplir con políticas de Kyverno
+podLabels:
+  app: falco
+  version: "1.0"
+  environment: production
+
+# Security context para cumplir con disallow-root-containers
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+

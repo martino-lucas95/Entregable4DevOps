@@ -1,0 +1,93 @@
+[2025-11-24 21:49:22] ==========================================
+[2025-11-24 21:49:22] Generación de Alerta de Falco
+[2025-11-24 21:49:22] ==========================================
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] [1/4] Verificando instalación de Falco...
+pod/falco-9pvjh condition met
+[2025-11-24 21:49:22] ✓ Falco está instalado y funcionando
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] [2/4] Creando namespace de prueba: falco-test
+namespace/falco-test unchanged
+[2025-11-24 21:49:22] ✓ Namespace creado
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] [3/4] Creando pod de prueba para generar alerta...
+pod/falco-test-pod unchanged
+[2025-11-24 21:49:22] Esperando a que el pod esté listo...
+pod/falco-test-pod condition met
+[2025-11-24 21:49:22] ✓ Pod creado y listo
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] [4/4] Generando acción que dispara alerta de Falco...
+[2025-11-24 21:49:22] Acción: Ejecutar acciones sospechosas que Falco detecta
+[2025-11-24 21:49:22] 1. Modificar archivo del sistema /etc/passwd
+[2025-11-24 21:49:22] 2. Leer archivo sensible /etc/shadow
+[2025-11-24 21:49:22] 3. Crear archivo en directorio del sistema
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] Ejecutando: echo 'test' >> /etc/passwd
+sh: can't create /etc/passwd: Permission denied
+[2025-11-24 21:49:22] Ejecutando: cat /etc/shadow
+cat: can't open '/etc/shadow': Permission denied
+[2025-11-24 21:49:22] Ejecutando: touch /etc/test_file
+touch: /etc/test_file: Permission denied
+[2025-11-24 21:49:22] Ejecutando: echo test > /proc/sys/kernel/hostname
+sh: can't create /proc/sys/kernel/hostname: Read-only file system
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] Esperando 20 segundos para que Falco procese los eventos...
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] ==========================================
+[2025-11-24 21:49:22] Capturando Eventos de Falco
+[2025-11-24 21:49:22] ==========================================
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] Buscando alertas de Falco en los logs...
+[2025-11-24 21:49:22] Revisando todos los logs de Falco (últimos 200 líneas):
+Defaulted container "falco" out of: falco, falcoctl-artifact-follow, falcoctl-artifact-install (init)
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] Verificando si Falco está monitoreando eventos...
+Defaulted container "falco" out of: falco, falcoctl-artifact-follow, falcoctl-artifact-install (init)
+Tue Nov 25 00:36:16 2025: Enabled event sources: syscall
+Tue Nov 25 00:36:16 2025: Opening 'syscall' source with modern BPF probe.
+Tue Nov 25 00:36:16 2025: One ring buffer every '2' CPUs.
+Tue Nov 25 00:36:16 2025: [libs]: Trying to open the right engine!
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] ==========================================
+[2025-11-24 21:49:22] Descripción del Evento Detectado
+[2025-11-24 21:49:22] ==========================================
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] EVENTO: Intento de acceso y modificación de archivos del sistema
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] DESCRIPCIÓN:
+[2025-11-24 21:49:22] Se ejecutaron múltiples comandos que intentaron acceder y modificar archivos
+[2025-11-24 21:49:22] críticos del sistema operativo (/etc/passwd, /etc/shadow, /etc/hostname).
+[2025-11-24 21:49:22] Estas acciones son consideradas sospechosas porque:
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] 1. /etc/passwd y /etc/shadow contienen información sensible de usuarios del sistema
+[2025-11-24 21:49:22] 2. Modificar estos archivos puede indicar un intento de escalada de privilegios
+[2025-11-24 21:49:22] 3. Los contenedores no deberían modificar archivos del sistema host
+[2025-11-24 21:49:22] 4. Acceder a /etc/shadow requiere privilegios elevados y es una actividad sospechosa
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] Falco detecta este tipo de actividad mediante reglas que monitorean:
+[2025-11-24 21:49:22] - Lectura y escritura en archivos sensibles del sistema (/etc/shadow, /etc/passwd)
+[2025-11-24 21:49:22] - Modificaciones a archivos de configuración críticos
+[2025-11-24 21:49:22] - Accesos no autorizados a recursos del sistema
+[2025-11-24 21:49:22] - Actividades que violan el principio de menor privilegio
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] Aunque las acciones fueron bloqueadas por permisos del sistema, Falco monitorea
+[2025-11-24 21:49:22] estos intentos y puede generar alertas cuando detecta patrones sospechosos.
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] SEVERIDAD: Media-Alta
+[2025-11-24 21:49:22] RECOMENDACIÓN: Revisar el contenedor y el proceso que intentó realizar
+[2025-11-24 21:49:22] estas acciones. Considerar restricciones adicionales de seguridad y
+[2025-11-24 21:49:22] monitoreo continuo con Falco.
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] NOTA: Falco está monitoreando el cluster. Las alertas pueden aparecer en
+[2025-11-24 21:49:22] los logs cuando se detecten actividades que coincidan con las reglas
+[2025-11-24 21:49:22] configuradas. Verifica los logs de Falco regularmente para detectar
+[2025-11-24 21:49:22] actividades sospechosas.
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] Limpiando recursos de prueba...
+namespace "falco-test" deleted
+[2025-11-24 21:49:22] 
+[2025-11-24 21:49:22] ==========================================
+[2025-11-24 21:49:22] Captura de Eventos Completada
+[2025-11-24 21:49:22] ==========================================
+[2025-11-24 21:49:22] Log guardado en: reports/falco-event.log
+[2025-11-24 21:49:22] 

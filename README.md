@@ -730,6 +730,56 @@ El script de validación:
 - [Documentación oficial de Kyverno](https://kyverno.io/docs/)
 - [Ejemplos de políticas](https://kyverno.io/policies/)
 
+### Monitoreo de Seguridad en Tiempo de Ejecución (Falco)
+
+Falco es un motor de detección de amenazas en tiempo de ejecución que monitorea el comportamiento del sistema y detecta actividades sospechosas en contenedores y aplicaciones.
+
+#### Instalación de Falco
+
+Para instalar Falco en el cluster, ejecuta uno de los siguientes scripts desde la raíz del proyecto:
+
+**Linux/macOS:**
+```bash
+./install-falco.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+.\install-falco.ps1
+```
+
+El script realiza las siguientes acciones:
+1. Verifica la conexión al cluster de Kubernetes
+2. Agrega el repositorio oficial de Helm de Falco
+3. Instala Falco en el namespace `falco` con Falco Sidekick habilitado
+4. Verifica que la instalación sea exitosa
+
+#### Generar y Capturar Alertas
+
+Para generar una alerta de Falco y capturar el evento:
+
+```bash
+./generate-falco-alert.sh
+```
+
+Este script:
+1. Crea un pod de prueba
+2. Ejecuta una acción que dispara una alerta de Falco (intento de escritura en archivo del sistema)
+3. Captura los eventos de Falco
+4. Guarda toda la información en `reports/falco-event.log`
+
+**Tipos de alertas que Falco puede detectar:**
+- Escritura en archivos sensibles del sistema
+- Modificaciones a archivos de configuración críticos
+- Ejecución de procesos sospechosos
+- Accesos no autorizados a recursos del sistema
+- Actividades que violan el principio de menor privilegio
+
+**Recursos:**
+- [Documentación oficial de Falco](https://falco.org/docs/)
+- [Reglas de Falco](https://github.com/falcosecurity/rules)
+- [Falco Sidekick](https://github.com/falcosecurity/falcosidekick)
+
 ### Reportes de Seguridad
 
 - [Backend Dockerfile](./reports/backend/backend_dockerfile.md)
@@ -740,6 +790,7 @@ El script de validación:
 - [Semgrep Report](./reports/semgrep-report.txt) - Análisis estático de código fuente
 - [Checkmarx SCA Report (con dependencias dev/test)](./reports/Checkmarx-SCA-report-with-devtest-dependencies.json) - Análisis SCA completo
 - [Checkmarx SCA Report (producción)](./reports/Checkmarx-SCA-Report-Final.json) - Análisis SCA sin dependencias de desarrollo
+- [Falco Event Log](./reports/falco-event.log) - Eventos de seguridad detectados por Falco
 
 ## 📚 Documentación
 
