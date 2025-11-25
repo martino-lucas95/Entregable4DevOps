@@ -107,20 +107,18 @@ pipeline {
                     // Archive reports
                     archiveArtifacts artifacts: 'semgrep-report.*', allowEmptyArchive: true
                     
-                    // Check for critical issues without requiring readJSON plugin
-                    script {
-                        def semgrepOutput = readFile(file: 'semgrep-report.json')
-                        // Count findings with severity ERROR
-                        def criticalMatches = (semgrepOutput.findAll(/"severity":\s*"ERROR"/) ?: []).size()
+                    // Check for critical issues using shell command
+                    sh '''
+                        echo "Checking for critical issues in semgrep report..."
+                        CRITICAL_COUNT=$(grep -o '"severity":\s*"ERROR"' semgrep-report.json | wc -l)
                         
-                        if (criticalMatches > 0) {
-                            echo "⚠️  WARNING: Found ${criticalMatches} critical security issue(s) in static analysis"
+                        if [ "$CRITICAL_COUNT" -gt 0 ]; then
+                            echo "⚠️  WARNING: Found ${CRITICAL_COUNT} critical security issue(s) in static analysis"
                             echo "Review semgrep-report.json for details"
-                            // Don't fail for now - review findings first
-                        } else {
+                        else
                             echo "✅ No critical issues found in static analysis"
-                        }
-                    }
+                        fi
+                    '''
                 }
             }
         }
@@ -348,30 +346,22 @@ pipeline {
                     
                     archiveArtifacts artifacts: 'trivy-*-image.json', allowEmptyArchive: true
                     
-                    // Check for critical vulnerabilities without requiring readJSON plugin
-                    script {
-                        try {
-                            def backendOutput = readFile(file: 'trivy-backend-image.json')
-                            def frontendOutput = readFile(file: 'trivy-frontend-image.json')
-                            
-                            // Count CRITICAL vulnerabilities using regex
-                            def backendCritical = (backendOutput.findAll(/"Severity":\s*"CRITICAL"/) ?: []).size()
-                            def frontendCritical = (frontendOutput.findAll(/"Severity":\s*"CRITICAL"/) ?: []).size()
-                            
-                            def totalCritical = backendCritical + frontendCritical
-                            
-                            if (totalCritical > 0) {
-                                echo "⚠️  WARNING: Found ${totalCritical} critical vulnerabilities in Docker images (Backend: ${backendCritical}, Frontend: ${frontendCritical})"
-                                echo "Review trivy reports for details"
-                                // Don't fail - allow review of findings
-                            } else {
-                                echo "✅ No critical vulnerabilities found in Docker images. Scan completed successfully."
-                            }
-                        } catch (Exception e) {
-                            echo "Warning: Could not parse Trivy reports: ${e.message}"
-                            echo "Image vulnerability scan completed. Check Trivy reports for details."
-                        }
-                    }
+                    // Check for critical vulnerabilities using shell command
+                    sh '''
+                        echo "Checking for critical vulnerabilities in Trivy reports..."
+                        
+                        BACKEND_CRITICAL=$(grep -o '"Severity":\s*"CRITICAL"' trivy-backend-image.json 2>/dev/null | wc -l)
+                        FRONTEND_CRITICAL=$(grep -o '"Severity":\s*"CRITICAL"' trivy-frontend-image.json 2>/dev/null | wc -l)
+                        TOTAL_CRITICAL=$((BACKEND_CRITICAL + FRONTEND_CRITICAL))
+                        
+                        if [ "$TOTAL_CRITICAL" -gt 0 ]; then
+                            echo "⚠️  WARNING: Found ${TOTAL_CRITICAL} critical vulnerabilities in Docker images"
+                            echo "  Backend: ${BACKEND_CRITICAL}, Frontend: ${FRONTEND_CRITICAL}"
+                            echo "Review trivy reports for details"
+                        else
+                            echo "✅ No critical vulnerabilities found in Docker images"
+                        fi
+                    '''
                 }
             }
         }
