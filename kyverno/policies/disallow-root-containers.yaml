@@ -21,6 +21,10 @@ spec:
           - resources:
               kinds:
                 - Pod
+              namespaces:
+                - "!falco"
+                - "!kube-system"
+                - "!kube-public"
       validate:
         message: "No se permite ejecutar contenedores como root. Define runAsNonRoot: true en securityContext."
         foreach:

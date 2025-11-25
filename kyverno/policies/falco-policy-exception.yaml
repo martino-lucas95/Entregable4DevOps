@@ -1,0 +1,22 @@
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: falco-exception
+  namespace: falco
+spec:
+  match:
+    any:
+    - resources:
+        namespaces:
+        - falco
+  exceptions:
+  - policyName: disallow-root-containers
+    ruleNames:
+    - validate-run-as-non-root
+  - policyName: require-labels
+    ruleNames:
+    - check-required-labels
+  - policyName: require-resource-limits
+    ruleNames:
+    - require-limits
+

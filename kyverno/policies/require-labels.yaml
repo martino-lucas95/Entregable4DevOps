@@ -20,6 +20,10 @@ spec:
           - resources:
               kinds:
                 - Pod
+              namespaces:
+                - "!falco"
+                - "!kube-system"
+                - "!kube-public"
       validate:
         message: "Todos los pods deben tener los labels obligatorios: app, version, y environment."
         pattern:
