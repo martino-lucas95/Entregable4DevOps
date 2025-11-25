@@ -475,7 +475,6 @@ pipeline {
             script {
                 echo "=== Pipeline Execution: SUCCESS ==="
                 echo "Build: ${env.BUILD_NUMBER}"
-                echo "Environment: ${params.ENVIRONMENT}"
                 echo "Backend Image: ${BACKEND_IMAGE}:${IMAGE_TAG}"
                 echo "Frontend Image: ${FRONTEND_IMAGE}:${IMAGE_TAG}"
                 
@@ -496,24 +495,26 @@ pipeline {
         }
         
         always {
-            script {
-                // Cleanup
-                echo "Cleaning up workspace..."
-                
-                // Remove old Docker images
-                try {
-                    sh '''
-                        docker image prune -f || true
-                    '''
-                } catch (Exception e) {
-                    echo "Warning: Could not prune Docker images: ${e.message}"
-                }
-                
-                // Archive important artifacts
-                try {
-                    archiveArtifacts artifacts: '**/reports/*.json', allowEmptyArchive: true
-                } catch (Exception e) {
-                    echo "Warning: Could not archive artifacts: ${e.message}"
+            node {
+                script {
+                    // Cleanup
+                    echo "Cleaning up workspace..."
+                    
+                    // Remove old Docker images
+                    try {
+                        sh '''
+                            docker image prune -f || true
+                        '''
+                    } catch (Exception e) {
+                        echo "Warning: Could not prune Docker images: ${e.message}"
+                    }
+                    
+                    // Archive important artifacts
+                    try {
+                        archiveArtifacts artifacts: '**/reports/*.json', allowEmptyArchive: true
+                    } catch (Exception e) {
+                        echo "Warning: Could not archive artifacts: ${e.message}"
+                    }
                 }
             }
         }
