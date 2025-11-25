@@ -988,12 +988,6 @@ Esta guía incluye:
 
 ## 📚 Documentación
 
-### Guías Principales
-
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guía completa de despliegue con Kubernetes y Helm
-- **[helm-chart/README.md](./helm-chart/README.md)** - Documentación del Helm Chart
-- **[reports/image-analysis.md](./reports/image-analysis.md)** - Análisis de calidad de imágenes
-
 ### Estructura del Proyecto
 
 ```
