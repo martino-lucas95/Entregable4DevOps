@@ -20,15 +20,15 @@ TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Función para logging
 log() {
-    echo -e "${GREEN}[$TIMESTAMP]${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${GREEN}[$TIMESTAMP]${NC} $1" | tee -a "$LOG_FILE" >&2
 }
 
 log_error() {
-    echo -e "${RED}[$TIMESTAMP] ERROR:${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${RED}[$TIMESTAMP] ERROR:${NC} $1" | tee -a "$LOG_FILE" >&2
 }
 
 log_info() {
-    echo -e "${BLUE}[$TIMESTAMP] INFO:${NC} $1" | tee -a "$LOG_FILE"
+    echo -e "${BLUE}[$TIMESTAMP] INFO:${NC} $1" | tee -a "$LOG_FILE" >&2
 }
 
 # Función para obtener el puerto del backend
