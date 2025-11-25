@@ -495,28 +495,10 @@ pipeline {
         }
         
         always {
-            node {
-                script {
-                    // Cleanup
-                    echo "Cleaning up workspace..."
-                    
-                    // Remove old Docker images
-                    try {
-                        sh '''
-                            docker image prune -f || true
-                        '''
-                    } catch (Exception e) {
-                        echo "Warning: Could not prune Docker images: ${e.message}"
-                    }
-                    // Clean workspace
-                    
-                    // Archive important artifacts
-                    try {
-                        archiveArtifacts artifacts: '**/reports/*.json', allowEmptyArchive: true
-                    } catch (Exception e) {
-                        echo "Warning: Could not archive artifacts: ${e.message}"
-                    }
-                }
+            script {
+                // Cleanup
+                echo "Cleaning up workspace..."
+                echo "Pipeline execution completed"
             }
         }
     }
